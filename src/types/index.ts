@@ -1,3 +1,12 @@
+// 세부 체크리스트 항목 타입
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // 청소 항목 타입
 export interface CleaningTask {
   id: string;
@@ -7,6 +16,7 @@ export interface CleaningTask {
   frequency: Frequency;
   lastCompleted?: Date;
   isCompleted: boolean;
+  checklistItems: ChecklistItem[]; // 세부 체크리스트
   createdAt: Date;
   updatedAt: Date;
 }

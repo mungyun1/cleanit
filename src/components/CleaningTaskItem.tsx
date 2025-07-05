@@ -1,20 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CleaningTask } from "../types";
 import { COLORS, TYPOGRAPHY } from "../constants";
+import TaskDetailModal from "./TaskDetailModal";
 
 interface CleaningTaskItemProps {
   task: CleaningTask;
   onPress?: () => void;
   onToggle?: () => void;
+  onEdit?: (taskId: string) => void;
+  onUpdateTask?: (updatedTask: CleaningTask) => void;
+  onDeleteTask?: (taskId: string) => void;
 }
 
 const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
   task,
   onPress,
   onToggle,
+  onEdit,
+  onUpdateTask,
+  onDeleteTask,
 }) => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const getFrequencyText = (frequency: string) => {
     switch (frequency) {
       case "daily":
@@ -47,63 +55,87 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
     }
   };
 
+  const handleItemPress = () => {
+    setIsModalVisible(true);
+    if (onPress) onPress();
+  };
+
+  const handleToggleComplete = () => {
+    if (onToggle) onToggle();
+  };
+
+  const handleEdit = () => {
+    setIsModalVisible(false);
+    if (onEdit) onEdit(task.id);
+  };
+
   return (
-    <TouchableOpacity
-      style={[styles.container, task.isCompleted && styles.completed]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <Text
-              style={[styles.title, task.isCompleted && styles.completedText]}
+    <>
+      <TouchableOpacity
+        style={[styles.container, task.isCompleted && styles.completed]}
+        onPress={handleItemPress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <View style={styles.titleContainer}>
+              <Text
+                style={[styles.title, task.isCompleted && styles.completedText]}
+              >
+                {task.title}
+              </Text>
+              <View
+                style={[
+                  styles.spaceTag,
+                  { backgroundColor: getSpaceColor(task.space) },
+                ]}
+              >
+                <Text style={styles.spaceText}>{task.space}</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={handleToggleComplete}
+              style={styles.checkbox}
             >
-              {task.title}
-            </Text>
-            <View
+              <Ionicons
+                name={task.isCompleted ? "checkmark-circle" : "ellipse-outline"}
+                size={24}
+                color={
+                  task.isCompleted ? COLORS.primary : COLORS.onBackground + "60"
+                }
+              />
+            </TouchableOpacity>
+          </View>
+
+          {task.description && (
+            <Text
               style={[
-                styles.spaceTag,
-                { backgroundColor: getSpaceColor(task.space) },
+                styles.description,
+                task.isCompleted && styles.completedText,
               ]}
             >
-              <Text style={styles.spaceText}>{task.space}</Text>
-            </View>
-          </View>
-          <TouchableOpacity onPress={onToggle} style={styles.checkbox}>
-            <Ionicons
-              name={task.isCompleted ? "checkmark-circle" : "ellipse-outline"}
-              size={24}
-              color={
-                task.isCompleted ? COLORS.primary : COLORS.onBackground + "60"
-              }
-            />
-          </TouchableOpacity>
-        </View>
-
-        {task.description && (
-          <Text
-            style={[
-              styles.description,
-              task.isCompleted && styles.completedText,
-            ]}
-          >
-            {task.description}
-          </Text>
-        )}
-
-        <View style={styles.footer}>
-          <Text style={styles.frequency}>
-            {getFrequencyText(task.frequency)}
-          </Text>
-          {task.lastCompleted && (
-            <Text style={styles.lastCompleted}>
-              마지막 완료: {task.lastCompleted.toLocaleDateString("ko-KR")}
+              {task.description}
             </Text>
           )}
+
+          <View style={styles.footer}>
+            <Text style={styles.frequency}>
+              {getFrequencyText(task.frequency)}
+            </Text>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+
+      <TaskDetailModal
+        task={task}
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onToggleComplete={handleToggleComplete}
+        onEdit={handleEdit}
+        onUpdateTask={onUpdateTask}
+        onDeleteTask={onDeleteTask}
+      />
+    </>
   );
 };
 

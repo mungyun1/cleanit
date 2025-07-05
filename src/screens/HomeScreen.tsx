@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 import { COLORS, TYPOGRAPHY } from "../constants";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
+import { CleaningTask } from "../types";
 
 const HomeScreen: React.FC = () => {
   // 오늘 날짜 포맷팅
@@ -33,8 +34,40 @@ const HomeScreen: React.FC = () => {
 
   const todayInfo = getTodayDate();
 
+  const handleToggleTask = (taskId: string) => {
+    setTodayTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              isCompleted: !task.isCompleted,
+              lastCompleted: !task.isCompleted ? new Date() : undefined,
+              updatedAt: new Date(),
+            }
+          : task
+      )
+    );
+  };
+
+  const handleEditTask = (taskId: string) => {
+    console.log("편집할 작업 ID:", taskId);
+    // navigation.navigate("EditTask", { taskId });
+  };
+
+  const handleUpdateTask = (updatedTask: CleaningTask) => {
+    setTodayTasks((prevTasks) =>
+      prevTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
+    );
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setTodayTasks((prevTasks) =>
+      prevTasks.filter((task) => task.id !== taskId)
+    );
+  };
+
   // 임시 데이터
-  const todayTasks = [
+  const [todayTasks, setTodayTasks] = useState<CleaningTask[]>([
     {
       id: "1",
       title: "거실 청소",
@@ -42,6 +75,22 @@ const HomeScreen: React.FC = () => {
       space: "거실",
       frequency: "daily" as const,
       isCompleted: false,
+      checklistItems: [
+        {
+          id: "1-1",
+          title: "바닥 쓸기",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "1-2",
+          title: "먼지 털기",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -52,10 +101,26 @@ const HomeScreen: React.FC = () => {
       space: "주방",
       frequency: "daily" as const,
       isCompleted: true,
+      checklistItems: [
+        {
+          id: "2-1",
+          title: "설거지",
+          isCompleted: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "2-2",
+          title: "주방 카운터 정리",
+          isCompleted: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date(),
     },
-  ];
+  ]);
 
   return (
     <View style={styles.container}>
@@ -100,7 +165,14 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>오늘의 작업</Text>
           {todayTasks.map((task) => (
-            <CleaningTaskItem key={task.id} task={task} />
+            <CleaningTaskItem
+              key={task.id}
+              task={task}
+              onToggle={() => handleToggleTask(task.id)}
+              onEdit={handleEditTask}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+            />
           ))}
         </View>
 

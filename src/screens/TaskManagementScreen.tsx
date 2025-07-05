@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -10,10 +10,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS, TYPOGRAPHY } from "../constants";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
+import { CleaningTask } from "../types";
+import { useNavigation } from "@react-navigation/native";
 
 const TaskManagementScreen: React.FC = () => {
+  const navigation = useNavigation();
+
   // 임시 데이터
-  const allTasks = [
+  const [allTasks, setAllTasks] = useState<CleaningTask[]>([
     {
       id: "1",
       title: "거실 청소",
@@ -21,6 +25,29 @@ const TaskManagementScreen: React.FC = () => {
       space: "거실",
       frequency: "daily" as const,
       isCompleted: false,
+      checklistItems: [
+        {
+          id: "1-1",
+          title: "바닥 쓸기",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "1-2",
+          title: "먼지 털기",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "1-3",
+          title: "가구 정리",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -31,6 +58,22 @@ const TaskManagementScreen: React.FC = () => {
       space: "주방",
       frequency: "daily" as const,
       isCompleted: true,
+      checklistItems: [
+        {
+          id: "2-1",
+          title: "설거지",
+          isCompleted: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "2-2",
+          title: "주방 카운터 정리",
+          isCompleted: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -41,16 +84,69 @@ const TaskManagementScreen: React.FC = () => {
       space: "욕실",
       frequency: "weekly" as const,
       isCompleted: false,
+      checklistItems: [
+        {
+          id: "3-1",
+          title: "변기 청소",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "3-2",
+          title: "세면대 청소",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "3-3",
+          title: "샤워기 청소",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date(),
     },
-  ];
+  ]);
 
   const getTasksBySpace = (space: string) => {
     return allTasks.filter((task) => task.space === space);
   };
 
   const spaces = ["거실", "주방", "욕실", "방"];
+
+  const handleToggleTask = (taskId: string) => {
+    setAllTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              isCompleted: !task.isCompleted,
+              lastCompleted: !task.isCompleted ? new Date() : undefined,
+              updatedAt: new Date(),
+            }
+          : task
+      )
+    );
+  };
+
+  const handleEditTask = (taskId: string) => {
+    console.log("편집할 작업 ID:", taskId);
+    // navigation.navigate("EditTask", { taskId });
+  };
+
+  const handleUpdateTask = (updatedTask: CleaningTask) => {
+    setAllTasks((prevTasks) =>
+      prevTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
+    );
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setAllTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+  };
 
   return (
     <View style={styles.container}>
@@ -110,7 +206,14 @@ const TaskManagementScreen: React.FC = () => {
           </View>
 
           {allTasks.map((task) => (
-            <CleaningTaskItem key={task.id} task={task} />
+            <CleaningTaskItem
+              key={task.id}
+              task={task}
+              onToggle={() => handleToggleTask(task.id)}
+              onEdit={handleEditTask}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+            />
           ))}
         </View>
       </ScrollView>
