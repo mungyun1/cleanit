@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   Switch,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, TYPOGRAPHY } from "../constants";
+import Header from "../components/Header";
 
 const SettingsScreen: React.FC = () => {
   const [notifications, setNotifications] = React.useState(true);
@@ -58,16 +58,18 @@ const SettingsScreen: React.FC = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>설정</Text>
-          <Text style={styles.subtitle}>앱 설정을 관리하세요</Text>
-        </View>
-
+        <Header
+          title="⚙️ 설정"
+          subtitle="앱 설정을 관리하세요"
+          showMenuButton={true}
+          onMenuPress={() => console.log("메뉴 버튼 클릭")}
+        />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>일반</Text>
           {settingsItems.slice(0, 2).map((item) => (
@@ -164,7 +166,7 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.footerSubtext}>개인 청소 관리 도우미</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -175,6 +177,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
   header: {
     padding: 20,

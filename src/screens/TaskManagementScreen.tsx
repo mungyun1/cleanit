@@ -6,10 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, TYPOGRAPHY } from "../constants";
 import CleaningTaskItem from "../components/CleaningTaskItem";
+import Header from "../components/Header";
 
 const TaskManagementScreen: React.FC = () => {
   // 임시 데이터
@@ -53,16 +53,18 @@ const TaskManagementScreen: React.FC = () => {
   const spaces = ["거실", "주방", "욕실", "방"];
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>작업 관리</Text>
-          <Text style={styles.subtitle}>모든 청소 작업을 관리하세요</Text>
-        </View>
-
+        <Header
+          title="📋 작업 관리"
+          subtitle="모든 청소 작업을 관리하세요"
+          showMenuButton={true}
+          onMenuPress={() => console.log("메뉴 버튼 클릭")}
+        />
         <View style={styles.filtersContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TouchableOpacity
@@ -112,7 +114,7 @@ const TaskManagementScreen: React.FC = () => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -123,6 +125,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
   header: {
     padding: 20,
@@ -139,7 +144,7 @@ const styles = StyleSheet.create({
   },
   filtersContainer: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginVertical: 20,
   },
   filterButton: {
     backgroundColor: COLORS.surface,

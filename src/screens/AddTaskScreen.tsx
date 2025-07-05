@@ -1,8 +1,37 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { COLORS, TYPOGRAPHY } from "../constants";
+import Header from "../components/Header";
+
 const AddTaskScreen = () => (
-  <View>
-    <Text>청소 항목 추가 화면</Text>
+  <View style={styles.container}>
+    <Header
+      title="➕ 새 작업 추가"
+      subtitle="새로운 청소 작업을 추가하세요"
+      showBackButton={true}
+      onBackPress={() => console.log("뒤로가기")}
+    />
+    <View style={styles.content}>
+      <Text style={styles.placeholderText}>청소 항목 추가 화면</Text>
+    </View>
   </View>
 );
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  placeholderText: {
+    ...TYPOGRAPHY.body1,
+    color: COLORS.onBackground + "60",
+  },
+});
+
 export default AddTaskScreen;

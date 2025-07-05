@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
 import { COLORS, TYPOGRAPHY } from "../constants";
+import Header from "../components/Header";
 import {
   CALENDAR_MOCK_DATA,
   MONTHLY_STATS_MOCK,
@@ -63,16 +63,18 @@ const CalendarScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>캘린더</Text>
-          <Text style={styles.subtitle}>청소 기록 및 계획</Text>
-        </View>
-
+        <Header
+          title="📅 캘린더"
+          subtitle="청소 기록 및 계획"
+          showMenuButton={true}
+          onMenuPress={() => console.log("메뉴 버튼 클릭")}
+        />
         <View style={styles.calendarContainer}>
           <Text style={styles.sectionTitle}>이번 달 청소 현황</Text>
           <View style={styles.calendarWrapper}>
@@ -128,7 +130,7 @@ const CalendarScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -139,6 +141,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
   header: {
     padding: 20,
@@ -155,7 +160,7 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginVertical: 20,
   },
   sectionTitle: {
     ...TYPOGRAPHY.h3,
