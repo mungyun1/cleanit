@@ -13,7 +13,7 @@ export interface CleaningTask {
   title: string;
   description?: string;
   space: string; // 공간 (거실, 주방, 욕실 등)
-  frequency: Frequency;
+  frequency: FrequencySettings;
   lastCompleted?: Date;
   isCompleted: boolean;
   checklistItems: ChecklistItem[]; // 세부 체크리스트
@@ -23,6 +23,23 @@ export interface CleaningTask {
 
 // 청소 주기 타입
 export type Frequency = "daily" | "weekly" | "biweekly" | "monthly" | "custom";
+
+// 요일 타입
+export type DayOfWeek =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
+
+// 청소 주기 설정 타입
+export interface FrequencySettings {
+  type: Frequency;
+  dayOfWeek?: DayOfWeek; // weekly, biweekly일 때 사용
+  customDays?: number; // custom일 때 사용 (예: 3일마다)
+}
 
 // 공간 타입
 export interface Space {

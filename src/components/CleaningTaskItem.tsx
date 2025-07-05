@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { CleaningTask } from "../types";
+import { CleaningTask, FrequencySettings } from "../types";
 import { COLORS, TYPOGRAPHY } from "../constants";
 import TaskDetailModal from "./TaskDetailModal";
 
@@ -23,20 +23,32 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
   onDeleteTask,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const getFrequencyText = (frequency: string) => {
-    switch (frequency) {
+  const getFrequencyText = (frequency: FrequencySettings) => {
+    const dayNames = {
+      monday: "월요일",
+      tuesday: "화요일",
+      wednesday: "수요일",
+      thursday: "목요일",
+      friday: "금요일",
+      saturday: "토요일",
+      sunday: "일요일",
+    };
+
+    switch (frequency.type) {
       case "daily":
         return "매일";
       case "weekly":
-        return "매주";
+        return `매주 ${frequency.dayOfWeek ? dayNames[frequency.dayOfWeek] : ""}`;
       case "biweekly":
-        return "격주";
+        return `격주 ${frequency.dayOfWeek ? dayNames[frequency.dayOfWeek] : ""}`;
       case "monthly":
         return "월 1회";
       case "custom":
-        return "사용자 정의";
+        return frequency.customDays
+          ? `${frequency.customDays}일마다`
+          : "사용자 정의";
       default:
-        return frequency;
+        return "알 수 없음";
     }
   };
 
@@ -48,7 +60,9 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
         return COLORS.kitchen;
       case "욕실":
         return COLORS.bathroom;
-      case "방":
+      case "화장실":
+        return COLORS.toilet;
+      case "침실":
         return COLORS.bedroom;
       default:
         return COLORS.common;

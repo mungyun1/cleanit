@@ -92,6 +92,7 @@ export const LEGEND_DATA: LegendItem[] = [
   { color: COLORS.livingRoom, label: "거실" },
   { color: COLORS.kitchen, label: "주방" },
   { color: COLORS.bathroom, label: "욕실" },
-  { color: COLORS.bedroom, label: "방" },
+  { color: COLORS.toilet, label: "화장실" },
+  { color: COLORS.bedroom, label: "침실" },
   { color: COLORS.common, label: "공용" },
 ];

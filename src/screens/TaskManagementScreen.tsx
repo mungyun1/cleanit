@@ -10,11 +10,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS, TYPOGRAPHY } from "../constants";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
+import AddTaskModal from "../components/AddTaskModal";
 import { CleaningTask } from "../types";
 import { useNavigation } from "@react-navigation/native";
 
 const TaskManagementScreen: React.FC = () => {
   const navigation = useNavigation();
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
   // 임시 데이터
   const [allTasks, setAllTasks] = useState<CleaningTask[]>([
@@ -23,7 +25,7 @@ const TaskManagementScreen: React.FC = () => {
       title: "거실 청소",
       description: "바닥 쓸기, 먼지 털기",
       space: "거실",
-      frequency: "daily" as const,
+      frequency: { type: "daily" },
       isCompleted: false,
       checklistItems: [
         {
@@ -56,7 +58,7 @@ const TaskManagementScreen: React.FC = () => {
       title: "주방 정리",
       description: "설거지, 주방 정리",
       space: "주방",
-      frequency: "daily" as const,
+      frequency: { type: "daily" },
       isCompleted: true,
       checklistItems: [
         {
@@ -82,7 +84,7 @@ const TaskManagementScreen: React.FC = () => {
       title: "욕실 청소",
       description: "변기, 세면대, 샤워기 청소",
       space: "욕실",
-      frequency: "weekly" as const,
+      frequency: { type: "weekly", dayOfWeek: "monday" },
       isCompleted: false,
       checklistItems: [
         {
@@ -116,7 +118,7 @@ const TaskManagementScreen: React.FC = () => {
     return allTasks.filter((task) => task.space === space);
   };
 
-  const spaces = ["거실", "주방", "욕실", "방"];
+  const spaces = ["거실", "주방", "욕실", "화장실", "침실"];
 
   const handleToggleTask = (taskId: string) => {
     setAllTasks((prevTasks) =>
@@ -146,6 +148,11 @@ const TaskManagementScreen: React.FC = () => {
 
   const handleDeleteTask = (taskId: string) => {
     setAllTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+  };
+
+  const handleAddTask = (newTask: CleaningTask) => {
+    setAllTasks((prevTasks) => [...prevTasks, newTask]);
+    setIsAddModalVisible(false);
   };
 
   return (
@@ -200,7 +207,10 @@ const TaskManagementScreen: React.FC = () => {
         <View style={styles.tasksContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>모든 작업</Text>
-            <TouchableOpacity style={styles.addButton}>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => setIsAddModalVisible(true)}
+            >
               <Ionicons name="add" size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
@@ -217,6 +227,12 @@ const TaskManagementScreen: React.FC = () => {
           ))}
         </View>
       </ScrollView>
+
+      <AddTaskModal
+        visible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)}
+        onAddTask={handleAddTask}
+      />
     </View>
   );
 };

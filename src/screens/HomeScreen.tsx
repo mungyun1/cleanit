@@ -9,9 +9,11 @@ import {
 import { COLORS, TYPOGRAPHY } from "../constants";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
+import AddTaskModal from "../components/AddTaskModal";
 import { CleaningTask } from "../types";
 
 const HomeScreen: React.FC = () => {
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   // 오늘 날짜 포맷팅
   const getTodayDate = () => {
     const today = new Date();
@@ -66,6 +68,11 @@ const HomeScreen: React.FC = () => {
     );
   };
 
+  const handleAddTask = (newTask: CleaningTask) => {
+    setTodayTasks((prevTasks) => [...prevTasks, newTask]);
+    setIsAddModalVisible(false);
+  };
+
   // 임시 데이터
   const [todayTasks, setTodayTasks] = useState<CleaningTask[]>([
     {
@@ -73,7 +80,7 @@ const HomeScreen: React.FC = () => {
       title: "거실 청소",
       description: "바닥 쓸기, 먼지 털기",
       space: "거실",
-      frequency: "daily" as const,
+      frequency: { type: "daily" },
       isCompleted: false,
       checklistItems: [
         {
@@ -99,7 +106,7 @@ const HomeScreen: React.FC = () => {
       title: "주방 정리",
       description: "설거지, 주방 정리",
       space: "주방",
-      frequency: "daily" as const,
+      frequency: { type: "daily" },
       isCompleted: true,
       checklistItems: [
         {
@@ -176,10 +183,19 @@ const HomeScreen: React.FC = () => {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setIsAddModalVisible(true)}
+        >
           <Text style={styles.addButtonText}>+ 새 작업 추가</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <AddTaskModal
+        visible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)}
+        onAddTask={handleAddTask}
+      />
     </View>
   );
 };
