@@ -376,9 +376,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   </View>
                 ))
               ) : (
-                <Text style={styles.emptyChecklistText}>
-                  체크리스트가 없습니다.{"\n"}+ 버튼을 눌러 추가해 보세요!
-                </Text>
+                <View>
+                  <Text style={styles.emptyChecklistText}>
+                    체크리스트가 없습니다.
+                  </Text>
+                  <Text style={styles.emptyChecklistText}>
+                    + 버튼을 눌러 추가해 보세요!
+                  </Text>
+                </View>
               )}
             </View>
 

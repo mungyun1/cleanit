@@ -238,10 +238,14 @@ const TaskManagementScreen: React.FC = () => {
               <Text style={styles.emptyStateTitle}>
                 아직 청소 작업이 없어요! 📝
               </Text>
-              <Text style={styles.emptyStateDescription}>
-                첫 번째 청소 작업을 추가해보세요.{"\n"}
-                정기적인 청소 습관을 만들어보세요.
-              </Text>
+              <View>
+                <Text style={styles.emptyStateDescription}>
+                  첫 번째 청소 작업을 추가해보세요.
+                </Text>
+                <Text style={styles.emptyStateDescription}>
+                  정기적인 청소 습관을 만들어보세요.
+                </Text>
+              </View>
               <TouchableOpacity
                 style={styles.emptyStateButton}
                 onPress={() => setIsAddModalVisible(true)}

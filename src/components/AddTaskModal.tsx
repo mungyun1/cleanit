@@ -502,10 +502,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       size={32}
                       color={COLORS.onBackground + "40"}
                     />
-                    <Text style={styles.emptyChecklistText}>
-                      공간을 선택하면 기본 체크리스트가 추가됩니다.{"\n"}+
-                      버튼으로 추가 항목을 만들 수 있습니다!
-                    </Text>
+                    <View>
+                      <Text style={styles.emptyChecklistText}>
+                        공간을 선택하면 기본 체크리스트가 추가됩니다.
+                      </Text>
+                      <Text style={styles.emptyChecklistText}>
+                        + 버튼으로 추가 항목을 만들 수 있습니다!
+                      </Text>
+                    </View>
                   </View>
                 )}
               </View>

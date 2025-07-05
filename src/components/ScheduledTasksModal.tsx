@@ -165,7 +165,7 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
   };
 
   const handleViewableItemsChanged = ({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
+    if (viewableItems && viewableItems.length > 0) {
       setCurrentIndex(viewableItems[0].index);
     }
   };
@@ -204,11 +204,6 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
                 onViewableItemsChanged={handleViewableItemsChanged}
                 viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
                 contentContainerStyle={styles.flatListContent}
-                getItemLayout={(data, index) => ({
-                  length: screenWidth - 40, // 좌우 패딩 제외
-                  offset: (screenWidth - 40) * index,
-                  index,
-                })}
               />
               {renderPaginationDots()}
             </>
@@ -272,6 +267,7 @@ const styles = StyleSheet.create({
   },
   flatListContent: {
     paddingHorizontal: 20,
+    alignItems: "center",
   },
   taskCard: {
     backgroundColor: COLORS.surface,
@@ -279,6 +275,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 28,
     width: screenWidth - 40,
+    minWidth: screenWidth - 40,
     shadowColor: COLORS.onBackground,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
