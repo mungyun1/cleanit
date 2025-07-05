@@ -3,16 +3,23 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import { COLORS, TYPOGRAPHY } from "../constants";
 import Header from "../components/Header";
+import ScheduledTasksModal from "../components/ScheduledTasksModal";
 import {
   CALENDAR_MOCK_DATA,
   MONTHLY_STATS_MOCK,
   LEGEND_DATA,
   CalendarMarkedDates,
+  SCHEDULED_TASKS_DATA,
+  ScheduledTask,
 } from "../data/mockData";
 
 const CalendarScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [markedDates, setMarkedDates] = useState<CalendarMarkedDates>({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedDateTasks, setSelectedDateTasks] = useState<ScheduledTask[]>(
+    []
+  );
 
   // 목데이터 로드
   useEffect(() => {
@@ -21,6 +28,19 @@ const CalendarScreen: React.FC = () => {
 
   const onDayPress = (day: DateData) => {
     setSelectedDate(day.dateString);
+
+    // 해당 날짜의 예정된 작업 확인
+    const tasks = SCHEDULED_TASKS_DATA[day.dateString] || [];
+    setSelectedDateTasks(tasks);
+
+    // 작업이 있으면 모달 열기
+    if (tasks.length > 0) {
+      setModalVisible(true);
+    }
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
   };
 
   const getTheme = () => ({
@@ -95,6 +115,7 @@ const CalendarScreen: React.FC = () => {
               hideExtraDays={true}
               disableMonthChange={false}
               hideDayNames={false}
+              markingType="custom"
             />
           </View>
           {renderLegend()}
@@ -130,6 +151,13 @@ const CalendarScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+
+      <ScheduledTasksModal
+        visible={modalVisible}
+        onClose={closeModal}
+        date={selectedDate}
+        tasks={selectedDateTasks}
+      />
     </View>
   );
 };

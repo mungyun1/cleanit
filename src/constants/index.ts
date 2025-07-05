@@ -126,7 +126,7 @@ export const DEFAULT_TASKS = [
     title: "욕실 청소",
     description: "변기, 세면대, 샤워기 청소",
     space: "욕실",
-    frequency: { type: "weekly", dayOfWeek: "monday" },
+    frequency: { type: "weekly", daysOfWeek: ["monday"] },
   },
   {
     title: "화장실 청소",
@@ -156,6 +156,6 @@ export const DEFAULT_TASKS = [
     title: "쓰레기 배출",
     description: "분리수거 및 쓰레기 배출",
     space: "common",
-    frequency: { type: "weekly", dayOfWeek: "wednesday" },
+    frequency: { type: "weekly", daysOfWeek: ["wednesday"] },
   },
 ];

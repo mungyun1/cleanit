@@ -36,8 +36,8 @@ export type DayOfWeek =
 
 // 청소 주기 설정 타입
 export interface FrequencySettings {
-  type: Frequency;
-  dayOfWeek?: DayOfWeek; // weekly, biweekly일 때 사용
+  type?: Frequency; // 선택되지 않은 상태를 허용
+  daysOfWeek?: DayOfWeek[]; // weekly, biweekly일 때 사용 (여러 요일 선택 가능)
   customDays?: number; // custom일 때 사용 (예: 3일마다)
 }
 

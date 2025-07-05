@@ -36,8 +36,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [selectedSpace, setSelectedSpace] = useState("");
   const [selectedFrequency, setSelectedFrequency] = useState<FrequencySettings>(
     {
-      type: "weekly",
-      dayOfWeek: "monday",
+      type: undefined,
+      daysOfWeek: [],
     }
   );
   const [customSpace, setCustomSpace] = useState("");
@@ -181,8 +181,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setTitle("");
     setSelectedSpace("");
     setSelectedFrequency({
-      type: "weekly",
-      dayOfWeek: "monday",
+      type: undefined,
+      daysOfWeek: [],
     });
     setCustomSpace("");
     setIsAddingCustomSpace(false);
@@ -194,6 +194,27 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const handleClose = () => {
     handleReset();
     onClose();
+  };
+
+  // 모달이 닫힐 때마다 상태 초기화
+  useEffect(() => {
+    if (!visible) {
+      handleReset();
+    }
+  }, [visible]);
+
+  // 저장 버튼 활성화 상태 확인
+  const isFormValid = () => {
+    const hasTitle = title.trim().length > 0;
+    const hasSpace = selectedSpace.length > 0;
+    const hasValidFrequency =
+      selectedFrequency.type &&
+      (selectedFrequency.type === "daily" ||
+        selectedFrequency.type === "monthly" ||
+        (selectedFrequency.daysOfWeek &&
+          selectedFrequency.daysOfWeek.length > 0));
+
+    return hasTitle && hasSpace && hasValidFrequency;
   };
 
   return (
@@ -342,27 +363,35 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               {(selectedFrequency.type === "weekly" ||
                 selectedFrequency.type === "biweekly") && (
                 <View style={styles.daySelectionContainer}>
-                  <Text style={styles.daySelectionTitle}>요일 선택</Text>
+                  <Text style={styles.daySelectionTitle}>
+                    요일 선택 (여러 개 선택 가능)
+                  </Text>
                   <View style={styles.dayContainer}>
                     {daysOfWeek.map((day) => (
                       <TouchableOpacity
                         key={day.value}
                         style={[
                           styles.dayButton,
-                          selectedFrequency.dayOfWeek === day.value &&
+                          selectedFrequency.daysOfWeek?.includes(day.value) &&
                             styles.selectedDayButton,
                         ]}
-                        onPress={() =>
+                        onPress={() => {
+                          const currentDays =
+                            selectedFrequency.daysOfWeek || [];
+                          const newDays = currentDays.includes(day.value)
+                            ? currentDays.filter((d) => d !== day.value)
+                            : [...currentDays, day.value];
+
                           setSelectedFrequency({
                             ...selectedFrequency,
-                            dayOfWeek: day.value,
-                          })
-                        }
+                            daysOfWeek: newDays,
+                          });
+                        }}
                       >
                         <Text
                           style={[
                             styles.dayButtonText,
-                            selectedFrequency.dayOfWeek === day.value &&
+                            selectedFrequency.daysOfWeek?.includes(day.value) &&
                               styles.selectedDayButtonText,
                           ]}
                         >
@@ -467,10 +496,17 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     </View>
                   ))
                 ) : (
-                  <Text style={styles.emptyChecklistText}>
-                    공간을 선택하면 기본 체크리스트가 추가됩니다.{"\n"}+
-                    버튼으로 추가 항목을 만들 수 있습니다!
-                  </Text>
+                  <View style={styles.emptyChecklistContainer}>
+                    <Ionicons
+                      name="list-outline"
+                      size={32}
+                      color={COLORS.onBackground + "40"}
+                    />
+                    <Text style={styles.emptyChecklistText}>
+                      공간을 선택하면 기본 체크리스트가 추가됩니다.{"\n"}+
+                      버튼으로 추가 항목을 만들 수 있습니다!
+                    </Text>
+                  </View>
                 )}
               </View>
             )}
@@ -483,9 +519,20 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSaveTask}
-              style={styles.saveButton}
+              style={[
+                styles.saveButton,
+                !isFormValid() && styles.saveButtonDisabled,
+              ]}
+              disabled={!isFormValid()}
             >
-              <Text style={styles.saveButtonText}>저장</Text>
+              <Text
+                style={[
+                  styles.saveButtonText,
+                  !isFormValid() && styles.saveButtonTextDisabled,
+                ]}
+              >
+                저장
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -669,6 +716,12 @@ const styles = StyleSheet.create({
     color: COLORS.onPrimary,
     fontWeight: "600",
   },
+  selectedDaysText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.primary,
+    marginTop: 8,
+    fontStyle: "italic",
+  },
   checklistHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -723,12 +776,17 @@ const styles = StyleSheet.create({
     padding: 4,
     marginLeft: 8,
   },
+  emptyChecklistContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
   emptyChecklistText: {
     ...TYPOGRAPHY.body2,
     color: COLORS.onBackground + "60",
     fontStyle: "italic",
     textAlign: "center",
-    paddingVertical: 20,
+    paddingVertical: 12,
+    lineHeight: 18,
   },
   footer: {
     flexDirection: "row",
@@ -761,6 +819,13 @@ const styles = StyleSheet.create({
   saveButtonText: {
     ...TYPOGRAPHY.button,
     color: COLORS.onPrimary,
+  },
+  saveButtonDisabled: {
+    backgroundColor: COLORS.primary + "40",
+    opacity: 0.6,
+  },
+  saveButtonTextDisabled: {
+    color: COLORS.onPrimary + "80",
   },
 });
 

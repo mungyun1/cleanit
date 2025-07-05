@@ -84,7 +84,7 @@ const TaskManagementScreen: React.FC = () => {
       title: "욕실 청소",
       description: "변기, 세면대, 샤워기 청소",
       space: "욕실",
-      frequency: { type: "weekly", dayOfWeek: "monday" },
+      frequency: { type: "weekly", daysOfWeek: ["monday"] },
       isCompleted: false,
       checklistItems: [
         {
@@ -215,16 +215,44 @@ const TaskManagementScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {allTasks.map((task) => (
-            <CleaningTaskItem
-              key={task.id}
-              task={task}
-              onToggle={() => handleToggleTask(task.id)}
-              onEdit={handleEditTask}
-              onUpdateTask={handleUpdateTask}
-              onDeleteTask={handleDeleteTask}
-            />
-          ))}
+          {allTasks.length > 0 ? (
+            allTasks.map((task) => (
+              <CleaningTaskItem
+                key={task.id}
+                task={task}
+                onToggle={() => handleToggleTask(task.id)}
+                onEdit={handleEditTask}
+                onUpdateTask={handleUpdateTask}
+                onDeleteTask={handleDeleteTask}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <View style={styles.emptyStateIcon}>
+                <Ionicons
+                  name="list-outline"
+                  size={48}
+                  color={COLORS.onBackground + "40"}
+                />
+              </View>
+              <Text style={styles.emptyStateTitle}>
+                아직 청소 작업이 없어요! 📝
+              </Text>
+              <Text style={styles.emptyStateDescription}>
+                첫 번째 청소 작업을 추가해보세요.{"\n"}
+                정기적인 청소 습관을 만들어보세요.
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyStateButton}
+                onPress={() => setIsAddModalVisible(true)}
+              >
+                <Ionicons name="add" size={20} color={COLORS.primary} />
+                <Text style={styles.emptyStateButtonText}>
+                  첫 번째 작업 추가하기
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -332,6 +360,43 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary + "20",
     padding: 8,
     borderRadius: 20,
+  },
+  emptyStateContainer: {
+    alignItems: "center",
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyStateIcon: {
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.onBackground,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptyStateDescription: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground + "60",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  emptyStateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.primary + "20",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: COLORS.primary + "30",
+  },
+  emptyStateButtonText: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.primary,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
 

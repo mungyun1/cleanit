@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { COLORS, TYPOGRAPHY } from "../constants";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
@@ -170,17 +171,35 @@ const HomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>오늘의 작업</Text>
-          {todayTasks.map((task) => (
-            <CleaningTaskItem
-              key={task.id}
-              task={task}
-              onToggle={() => handleToggleTask(task.id)}
-              onEdit={handleEditTask}
-              onUpdateTask={handleUpdateTask}
-              onDeleteTask={handleDeleteTask}
-            />
-          ))}
+          <Text style={styles.sectionTitle}>오늘의 청소</Text>
+          {todayTasks.length > 0 ? (
+            todayTasks.map((task) => (
+              <CleaningTaskItem
+                key={task.id}
+                task={task}
+                onToggle={() => handleToggleTask(task.id)}
+                onEdit={handleEditTask}
+                onUpdateTask={handleUpdateTask}
+                onDeleteTask={handleDeleteTask}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <View style={styles.emptyStateIcon}>
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={48}
+                  color={COLORS.onBackground + "40"}
+                />
+              </View>
+              <Text style={styles.emptyStateTitle}>
+                예정된 작업이 없습니다🧹
+              </Text>
+              <Text style={styles.emptyStateDescription}>
+                새로운 작업을 추가해보세요.
+              </Text>
+            </View>
+          )}
         </View>
 
         <TouchableOpacity
@@ -346,6 +365,43 @@ const styles = StyleSheet.create({
   addButtonText: {
     ...TYPOGRAPHY.button,
     color: COLORS.onPrimary,
+  },
+  emptyStateContainer: {
+    alignItems: "center",
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyStateIcon: {
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.onBackground,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptyStateDescription: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground + "60",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  emptyStateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.primary + "20",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: COLORS.primary + "30",
+  },
+  emptyStateButtonText: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.primary,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
 

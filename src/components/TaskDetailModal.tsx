@@ -124,9 +124,21 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       case "daily":
         return "매일";
       case "weekly":
-        return `매주 ${frequency.dayOfWeek ? dayNames[frequency.dayOfWeek] : ""}`;
+        if (frequency.daysOfWeek && frequency.daysOfWeek.length > 0) {
+          const dayLabels = frequency.daysOfWeek
+            .map((day) => dayNames[day])
+            .join(", ");
+          return `매주 ${dayLabels}`;
+        }
+        return "매주";
       case "biweekly":
-        return `격주 ${frequency.dayOfWeek ? dayNames[frequency.dayOfWeek] : ""}`;
+        if (frequency.daysOfWeek && frequency.daysOfWeek.length > 0) {
+          const dayLabels = frequency.daysOfWeek
+            .map((day) => dayNames[day])
+            .join(", ");
+          return `격주 ${dayLabels}`;
+        }
+        return "격주";
       case "monthly":
         return "월 1회";
       case "custom":
