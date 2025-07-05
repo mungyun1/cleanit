@@ -1,0 +1,123 @@
+import React from "react";
+import { SafeAreaView, StatusBar as RNStatusBar } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
+import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+
+// 화면들
+import HomeScreen from "./src/screens/HomeScreen";
+import CalendarScreen from "./src/screens/CalendarScreen";
+import TaskManagementScreen from "./src/screens/TaskManagementScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
+import AddTaskScreen from "./src/screens/AddTaskScreen";
+import EditTaskScreen from "./src/screens/EditTaskScreen";
+
+// 타입
+import { RootStackParamList } from "./src/types";
+import { COLORS } from "./src/constants";
+
+const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
+
+// 탭 네비게이터
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap;
+
+          if (route.name === "Home") {
+            iconName = focused ? "home" : "home-outline";
+          } else if (route.name === "Calendar") {
+            iconName = focused ? "calendar" : "calendar-outline";
+          } else if (route.name === "TaskManagement") {
+            iconName = focused ? "list" : "list-outline";
+          } else if (route.name === "Settings") {
+            iconName = focused ? "settings" : "settings-outline";
+          } else {
+            iconName = "help-circle-outline";
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.onBackground + "60",
+        tabBarStyle: {
+          backgroundColor: COLORS.surface,
+          borderTopColor: COLORS.onBackground + "20",
+          paddingTop: 5,
+          height: 60,
+          // iOS Safe Area 대응
+          paddingBottom: (RNStatusBar.currentHeight || 0) + 5,
+        },
+        headerShown: false,
+      })}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: "홈" }}
+      />
+      <Tab.Screen
+        name="Calendar"
+        component={CalendarScreen}
+        options={{ title: "캘린더" }}
+      />
+      <Tab.Screen
+        name="TaskManagement"
+        component={TaskManagementScreen}
+        options={{ title: "작업 관리" }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ title: "설정" }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// 메인 앱
+export default function App() {
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+      <StatusBar style="auto" />
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="Main" component={TabNavigator} />
+          <Stack.Screen
+            name="AddTask"
+            component={AddTaskScreen}
+            options={{
+              headerShown: true,
+              title: "청소 작업 추가",
+              headerStyle: {
+                backgroundColor: COLORS.primary,
+              },
+              headerTintColor: COLORS.onPrimary,
+            }}
+          />
+          <Stack.Screen
+            name="EditTask"
+            component={EditTaskScreen}
+            options={{
+              headerShown: true,
+              title: "청소 작업 수정",
+              headerStyle: {
+                backgroundColor: COLORS.primary,
+              },
+              headerTintColor: COLORS.onPrimary,
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaView>
+  );
+}

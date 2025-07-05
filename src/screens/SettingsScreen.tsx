@@ -1,0 +1,255 @@
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, TYPOGRAPHY } from "../constants";
+
+const SettingsScreen: React.FC = () => {
+  const [notifications, setNotifications] = React.useState(true);
+  const [darkMode, setDarkMode] = React.useState(false);
+
+  const settingsItems = [
+    {
+      id: "notifications",
+      title: "알림 설정",
+      subtitle: "청소 알림을 받으시겠습니까?",
+      type: "switch",
+      value: notifications,
+      onValueChange: setNotifications,
+      icon: "notifications",
+    },
+    {
+      id: "darkMode",
+      title: "다크 모드",
+      subtitle: "어두운 테마를 사용하시겠습니까?",
+      type: "switch",
+      value: darkMode,
+      onValueChange: setDarkMode,
+      icon: "moon",
+    },
+    {
+      id: "language",
+      title: "언어 설정",
+      subtitle: "한국어",
+      type: "navigate",
+      icon: "language",
+    },
+    {
+      id: "backup",
+      title: "데이터 백업",
+      subtitle: "데이터를 클라우드에 백업",
+      type: "navigate",
+      icon: "cloud-upload",
+    },
+    {
+      id: "about",
+      title: "앱 정보",
+      subtitle: "버전 1.0.0",
+      type: "navigate",
+      icon: "information-circle",
+    },
+  ];
+
+  return (
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>설정</Text>
+          <Text style={styles.subtitle}>앱 설정을 관리하세요</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>일반</Text>
+          {settingsItems.slice(0, 2).map((item) => (
+            <View key={item.id} style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name={item.icon as any}
+                    size={20}
+                    color={COLORS.primary}
+                  />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingTitle}>{item.title}</Text>
+                  <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+                </View>
+              </View>
+              {item.type === "switch" && (
+                <Switch
+                  value={item.value}
+                  onValueChange={item.onValueChange}
+                  trackColor={{
+                    false: COLORS.onBackground + "30",
+                    true: COLORS.primary + "50",
+                  }}
+                  thumbColor={
+                    item.value ? COLORS.primary : COLORS.onBackground + "60"
+                  }
+                />
+              )}
+              {item.type === "navigate" && (
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={COLORS.onBackground + "60"}
+                />
+              )}
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>데이터</Text>
+          {settingsItems.slice(2, 4).map((item) => (
+            <TouchableOpacity key={item.id} style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name={item.icon as any}
+                    size={20}
+                    color={COLORS.primary}
+                  />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingTitle}>{item.title}</Text>
+                  <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+                </View>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={COLORS.onBackground + "60"}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>정보</Text>
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <View style={styles.iconContainer}>
+                <Ionicons
+                  name="information-circle"
+                  size={20}
+                  color={COLORS.primary}
+                />
+              </View>
+              <View style={styles.settingText}>
+                <Text style={styles.settingTitle}>앱 정보</Text>
+                <Text style={styles.settingSubtitle}>버전 1.0.0</Text>
+              </View>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={COLORS.onBackground + "60"}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>CleanIt v1.0.0</Text>
+          <Text style={styles.footerSubtext}>개인 청소 관리 도우미</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    padding: 20,
+    paddingTop: 10,
+  },
+  title: {
+    ...TYPOGRAPHY.h1,
+    color: COLORS.onBackground,
+    marginBottom: 5,
+  },
+  subtitle: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground + "80",
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    ...TYPOGRAPHY.h4,
+    color: COLORS.onBackground + "80",
+    marginHorizontal: 20,
+    marginBottom: 10,
+    marginTop: 10,
+  },
+  settingItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.surface,
+    marginHorizontal: 20,
+    marginBottom: 1,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.onBackground + "10",
+  },
+  settingLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary + "20",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  settingText: {
+    flex: 1,
+  },
+  settingTitle: {
+    ...TYPOGRAPHY.body1,
+    color: COLORS.onBackground,
+    marginBottom: 2,
+  },
+  settingSubtitle: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground + "60",
+  },
+  footer: {
+    alignItems: "center",
+    padding: 20,
+    marginTop: 20,
+  },
+  footerText: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground + "60",
+    marginBottom: 5,
+  },
+  footerSubtext: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.onBackground + "40",
+  },
+});
+
+export default SettingsScreen;
