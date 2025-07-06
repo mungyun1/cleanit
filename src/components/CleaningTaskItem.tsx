@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { CleaningTask, FrequencySettings } from "../types";
+import { HouseholdTask, FrequencySettings } from "../types";
 import { COLORS, TYPOGRAPHY } from "../constants";
 import TaskDetailModal from "./TaskDetailModal";
 
 interface CleaningTaskItemProps {
-  task: CleaningTask;
+  task: HouseholdTask;
   onPress?: () => void;
   onToggle?: () => void;
   onEdit?: (taskId: string) => void;
-  onUpdateTask?: (updatedTask: CleaningTask) => void;
+  onUpdateTask?: (updatedTask: HouseholdTask) => void;
   onDeleteTask?: (taskId: string) => void;
 }
 
@@ -81,6 +81,47 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
     }
   };
 
+  const getLaundryTypeColor = (laundryType: string) => {
+    switch (laundryType) {
+      case "whites":
+        return "#E3F2FD"; // 연한 파란색
+      case "colors":
+        return "#F3E5F5"; // 연한 보라색
+      case "delicates":
+        return "#FFF3E0"; // 연한 주황색
+      case "bedding":
+        return "#E8F5E8"; // 연한 초록색
+      case "towels":
+        return "#FCE4EC"; // 연한 분홍색
+      default:
+        return COLORS.common;
+    }
+  };
+
+  const getLaundryTypeText = (laundryType: string) => {
+    switch (laundryType) {
+      case "whites":
+        return "흰 옷";
+      case "colors":
+        return "색 옷";
+      case "delicates":
+        return "섬세한 옷";
+      case "bedding":
+        return "침구";
+      case "towels":
+        return "수건";
+      default:
+        return laundryType;
+    }
+  };
+
+  const getCategoryIcon = () => {
+    if (task.category === "laundry") {
+      return <Ionicons name="shirt" size={16} color={COLORS.secondary} />;
+    }
+    return <Ionicons name="brush" size={16} color={COLORS.primary} />;
+  };
+
   const handleItemPress = () => {
     setIsModalVisible(true);
     if (onPress) onPress();
@@ -105,18 +146,33 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
         <View style={styles.content}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <Text
-                style={[styles.title, task.isCompleted && styles.completedText]}
-              >
-                {task.title}
-              </Text>
+              <View style={styles.titleRow}>
+                {getCategoryIcon()}
+                <Text
+                  style={[
+                    styles.title,
+                    task.isCompleted && styles.completedText,
+                  ]}
+                >
+                  {task.title}
+                </Text>
+              </View>
               <View
                 style={[
-                  styles.spaceTag,
-                  { backgroundColor: getSpaceColor(task.space) },
+                  styles.tag,
+                  {
+                    backgroundColor:
+                      task.category === "cleaning"
+                        ? getSpaceColor(task.space || "")
+                        : getLaundryTypeColor(task.laundryType || ""),
+                  },
                 ]}
               >
-                <Text style={styles.spaceText}>{task.space}</Text>
+                <Text style={styles.tagText}>
+                  {task.category === "cleaning"
+                    ? task.space
+                    : getLaundryTypeText(task.laundryType || "")}
+                </Text>
               </View>
             </View>
             <TouchableOpacity
@@ -195,24 +251,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 8,
+    flex: 1,
+  },
   title: {
     ...TYPOGRAPHY.h4,
     color: COLORS.onBackground,
-    marginRight: 8,
+    marginLeft: 6,
     flex: 1,
   },
   completedText: {
     textDecorationLine: "line-through",
     color: COLORS.onBackground + "60",
   },
-  spaceTag: {
+  tag: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  spaceText: {
+  tagText: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onPrimary,
+    color: COLORS.onBackground,
     fontWeight: "600",
   },
   checkbox: {

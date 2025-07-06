@@ -9,20 +9,32 @@ import {
   Dimensions,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { HouseholdTask, ChecklistItem, FrequencySettings } from "../types";
+import { COLORS, TYPOGRAPHY } from "../constants";
 import {
-  CleaningTask,
-  ChecklistItem,
-  FrequencySettings,
-  DayOfWeek,
-} from "../types";
-import { COLORS, TYPOGRAPHY, DEFAULT_CHECKLIST_TEMPLATES } from "../constants";
+  SPACES,
+  LAUNDRY_TYPES,
+  FREQUENCIES,
+  DAYS_OF_WEEK,
+} from "../data/taskFormData";
+import {
+  createChecklistItem,
+  getCleaningChecklistTemplate,
+  getLaundryChecklistTemplate,
+  generateAutoTitle,
+  isDefaultTitle,
+  toggleDayOfWeek,
+  validateTaskForm,
+} from "../utils/taskFormUtils";
 
 interface AddTaskModalProps {
   visible: boolean;
   onClose: () => void;
-  onAddTask: (task: CleaningTask) => void;
+  onAddTask: (task: HouseholdTask) => void;
 }
 
 const { width, height } = Dimensions.get("window");
@@ -33,7 +45,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   onAddTask,
 }) => {
   const [title, setTitle] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<
+    "cleaning" | "laundry"
+  >("cleaning");
   const [selectedSpace, setSelectedSpace] = useState("");
+  const [selectedLaundryType, setSelectedLaundryType] = useState<
+    "whites" | "colors" | "delicates" | "bedding" | "towels" | undefined
+  >(undefined);
   const [selectedFrequency, setSelectedFrequency] = useState<FrequencySettings>(
     {
       type: undefined,
@@ -46,67 +64,44 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [isAddingChecklistItem, setIsAddingChecklistItem] = useState(false);
 
-  const spaces = ["거실", "주방", "침실", "욕실", "화장실", "공용"];
-  const frequencies = [
-    { label: "매일", value: "daily" as const },
-    { label: "매주", value: "weekly" as const },
-    { label: "격주", value: "biweekly" as const },
-    { label: "월 1회", value: "monthly" as const },
-    { label: "사용자 정의", value: "custom" as const },
-  ];
-
-  const daysOfWeek = [
-    { label: "월요일", value: "monday" as DayOfWeek },
-    { label: "화요일", value: "tuesday" as DayOfWeek },
-    { label: "수요일", value: "wednesday" as DayOfWeek },
-    { label: "목요일", value: "thursday" as DayOfWeek },
-    { label: "금요일", value: "friday" as DayOfWeek },
-    { label: "토요일", value: "saturday" as DayOfWeek },
-    { label: "일요일", value: "sunday" as DayOfWeek },
-  ];
-
-  // 공간 선택 시 기본 체크리스트 템플릿 적용 및 제목 자동 완성
+  // 카테고리나 공간/빨래 타입 선택 시 기본 체크리스트 템플릿 적용 및 제목 자동 완성
   useEffect(() => {
-    if (selectedSpace) {
+    if (selectedCategory === "cleaning" && selectedSpace) {
       // 제목 자동 완성 (기존 제목이 비어있거나 기본 제목인 경우에만)
-      if (
-        !title ||
-        title === "" ||
-        title.match(/^(거실|주방|방|욕실|공용)\s*청소$/)
-      ) {
-        setTitle(`${selectedSpace} 청소`);
+      if (isDefaultTitle(title, "cleaning")) {
+        setTitle(generateAutoTitle("cleaning", selectedSpace));
       }
 
       // 기본 체크리스트 템플릿 적용
-      if (
-        DEFAULT_CHECKLIST_TEMPLATES[
-          selectedSpace as keyof typeof DEFAULT_CHECKLIST_TEMPLATES
-        ]
-      ) {
-        const templateItems =
-          DEFAULT_CHECKLIST_TEMPLATES[
-            selectedSpace as keyof typeof DEFAULT_CHECKLIST_TEMPLATES
-          ];
-        const newChecklistItems: ChecklistItem[] = templateItems.map(
-          (item, index) => ({
-            id: `template-${Date.now()}-${index}`,
-            title: item,
-            isCompleted: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
+      const newChecklistItems = getCleaningChecklistTemplate(selectedSpace);
+      setChecklistItems(newChecklistItems);
+    } else if (selectedCategory === "laundry" && selectedLaundryType) {
+      // 빨래 타입에 따른 제목 자동 완성
+      const laundryTypeText = LAUNDRY_TYPES.find(
+        (lt) => lt.value === selectedLaundryType
+      )?.label;
+      if (isDefaultTitle(title, "laundry")) {
+        setTitle(
+          generateAutoTitle(
+            "laundry",
+            undefined,
+            selectedLaundryType,
+            laundryTypeText
+          )
         );
-        setChecklistItems(newChecklistItems);
-      } else {
-        setChecklistItems([]);
       }
+
+      // 빨래 기본 체크리스트 템플릿 적용
+      const newChecklistItems =
+        getLaundryChecklistTemplate(selectedLaundryType);
+      setChecklistItems(newChecklistItems);
     }
-  }, [selectedSpace]);
+  }, [selectedCategory, selectedSpace, selectedLaundryType]);
 
   const handleAddCustomSpace = () => {
     if (!customSpace.trim()) return;
 
-    if (spaces.includes(customSpace.trim())) {
+    if (SPACES.includes(customSpace.trim())) {
       Alert.alert("오류", "이미 존재하는 공간입니다.");
       return;
     }
@@ -119,13 +114,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const handleAddChecklistItem = () => {
     if (!newChecklistItem.trim()) return;
 
-    const newItem: ChecklistItem = {
-      id: Date.now().toString(),
-      title: newChecklistItem.trim(),
-      isCompleted: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const newItem = createChecklistItem(newChecklistItem);
 
     setChecklistItems([...checklistItems, newItem]);
     setNewChecklistItem("");
@@ -147,25 +136,26 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   };
 
   const handleSaveTask = () => {
-    if (!title.trim()) {
-      Alert.alert("오류", "작업 제목을 입력해주세요.");
+    const validation = validateTaskForm(
+      title,
+      selectedCategory,
+      selectedSpace,
+      selectedLaundryType,
+      selectedFrequency
+    );
+
+    if (!validation.isValid) {
+      Alert.alert("오류", validation.errorMessage);
       return;
     }
 
-    if (!selectedSpace) {
-      Alert.alert("오류", "공간을 선택해주세요.");
-      return;
-    }
-
-    if (!selectedFrequency.type) {
-      Alert.alert("오류", "청소 주기를 선택해주세요.");
-      return;
-    }
-
-    const newTask: CleaningTask = {
+    const newTask: HouseholdTask = {
       id: Date.now().toString(),
       title: title.trim(),
-      space: selectedSpace,
+      category: selectedCategory,
+      space: selectedCategory === "cleaning" ? selectedSpace : undefined,
+      laundryType:
+        selectedCategory === "laundry" ? selectedLaundryType : undefined,
       frequency: selectedFrequency,
       isCompleted: false,
       checklistItems,
@@ -179,7 +169,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   const handleReset = () => {
     setTitle("");
+    setSelectedCategory("cleaning");
     setSelectedSpace("");
+    setSelectedLaundryType(undefined);
     setSelectedFrequency({
       type: undefined,
       daysOfWeek: [],
@@ -203,185 +195,288 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     }
   }, [visible]);
 
-  // 저장 버튼 활성화 상태 확인
   const isFormValid = () => {
-    const hasTitle = title.trim().length > 0;
-    const hasSpace = selectedSpace.length > 0;
-    const hasValidFrequency =
-      selectedFrequency.type &&
-      (selectedFrequency.type === "daily" ||
-        selectedFrequency.type === "monthly" ||
-        (selectedFrequency.daysOfWeek &&
-          selectedFrequency.daysOfWeek.length > 0));
-
-    return hasTitle && hasSpace && hasValidFrequency;
+    const validation = validateTaskForm(
+      title,
+      selectedCategory,
+      selectedSpace,
+      selectedLaundryType,
+      selectedFrequency
+    );
+    return validation.isValid;
   };
 
   return (
     <Modal
       visible={visible}
-      animationType="fade"
+      animationType="none"
       transparent={true}
       onRequestClose={handleClose}
     >
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <View style={styles.modalContainer}>
-          {/* 헤더 */}
-          <View style={styles.header}>
+          <View style={styles.modalHeader}>
+            <View style={styles.headerTop}>
+              <View style={styles.dragHandle} />
+            </View>
             <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>새 작업 추가</Text>
               <TouchableOpacity
                 onPress={handleClose}
                 style={styles.closeButton}
               >
                 <Ionicons name="close" size={24} color={COLORS.onBackground} />
               </TouchableOpacity>
+              <Text style={styles.modalTitle}>새 작업 추가</Text>
+              <TouchableOpacity
+                onPress={handleSaveTask}
+                style={[
+                  styles.saveButton,
+                  !isFormValid() && styles.saveButtonDisabled,
+                ]}
+                disabled={!isFormValid()}
+              >
+                <Text
+                  style={[
+                    styles.saveButtonText,
+                    !isFormValid() && styles.saveButtonTextDisabled,
+                  ]}
+                >
+                  저장
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
           <ScrollView
-            style={styles.content}
+            style={styles.modalContent}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
           >
-            {/* 작업 제목 */}
+            {/* 카테고리 선택 */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>작업 제목 *</Text>
+              <Text style={styles.sectionTitle}>카테고리</Text>
+              <View style={styles.categoryContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.categoryButton,
+                    selectedCategory === "cleaning" &&
+                      styles.categoryButtonSelected,
+                  ]}
+                  onPress={() => setSelectedCategory("cleaning")}
+                >
+                  <Ionicons
+                    name="brush"
+                    size={20}
+                    color={
+                      selectedCategory === "cleaning"
+                        ? COLORS.onPrimary
+                        : COLORS.primary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.categoryButtonText,
+                      selectedCategory === "cleaning" &&
+                        styles.categoryButtonTextSelected,
+                    ]}
+                  >
+                    청소
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.categoryButton,
+                    selectedCategory === "laundry" &&
+                      styles.categoryButtonSelected,
+                  ]}
+                  onPress={() => setSelectedCategory("laundry")}
+                >
+                  <Ionicons
+                    name="shirt"
+                    size={20}
+                    color={
+                      selectedCategory === "laundry"
+                        ? COLORS.onPrimary
+                        : COLORS.secondary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.categoryButtonText,
+                      selectedCategory === "laundry" &&
+                        styles.categoryButtonTextSelected,
+                    ]}
+                  >
+                    빨래
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* 제목 입력 */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>작업 제목</Text>
               <TextInput
                 style={styles.titleInput}
-                placeholder="예: 거실 청소, 주방 정리"
-                placeholderTextColor="#666666"
+                placeholder="작업 제목을 입력하세요"
                 value={title}
                 onChangeText={setTitle}
                 maxLength={50}
               />
             </View>
 
-            {/* 공간 선택 */}
+            {/* 공간/빨래 타입 선택 */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>공간 *</Text>
-              <View style={styles.spaceContainer}>
-                {spaces.map((space) => (
-                  <TouchableOpacity
-                    key={space}
-                    style={[
-                      styles.spaceButton,
-                      selectedSpace === space && styles.selectedSpaceButton,
-                    ]}
-                    onPress={() => setSelectedSpace(space)}
-                  >
-                    <Text
+              <Text style={styles.sectionTitle}>
+                {selectedCategory === "cleaning" ? "공간" : "빨래 타입"}
+              </Text>
+
+              {selectedCategory === "cleaning" ? (
+                <View style={styles.optionsContainer}>
+                  {SPACES.map((space) => (
+                    <TouchableOpacity
+                      key={space}
                       style={[
-                        styles.spaceButtonText,
-                        selectedSpace === space &&
-                          styles.selectedSpaceButtonText,
+                        styles.optionButton,
+                        selectedSpace === space && styles.optionButtonSelected,
                       ]}
+                      onPress={() => setSelectedSpace(space)}
                     >
-                      {space}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Text
+                        style={[
+                          styles.optionButtonText,
+                          selectedSpace === space &&
+                            styles.optionButtonTextSelected,
+                        ]}
+                      >
+                        {space}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
 
-              {/* 사용자 정의 공간 */}
-              <TouchableOpacity
-                style={styles.addCustomSpaceButton}
-                onPress={() => setIsAddingCustomSpace(!isAddingCustomSpace)}
-              >
-                <Ionicons
-                  name={isAddingCustomSpace ? "remove" : "add"}
-                  size={20}
-                  color={COLORS.primary}
-                />
-                <Text style={styles.addCustomSpaceText}>
-                  {isAddingCustomSpace ? "취소" : "공간 추가"}
-                </Text>
-              </TouchableOpacity>
-
-              {isAddingCustomSpace && (
-                <View style={styles.customSpaceContainer}>
-                  <TextInput
-                    style={styles.customSpaceInput}
-                    placeholder="새 공간 이름을 입력하세요"
-                    placeholderTextColor="#666666"
-                    value={customSpace}
-                    onChangeText={setCustomSpace}
-                    onSubmitEditing={handleAddCustomSpace}
-                    returnKeyType="done"
-                  />
-                  <TouchableOpacity
-                    onPress={handleAddCustomSpace}
-                    style={styles.addCustomSpaceConfirmButton}
-                    disabled={!customSpace.trim()}
-                  >
-                    <Ionicons
-                      name="checkmark"
-                      size={20}
-                      color={
-                        customSpace.trim()
-                          ? COLORS.primary
-                          : COLORS.onBackground + "40"
+                  {isAddingCustomSpace ? (
+                    <View style={styles.customInputContainer}>
+                      <TextInput
+                        style={styles.customInput}
+                        placeholder="공간 이름 입력"
+                        value={customSpace}
+                        onChangeText={setCustomSpace}
+                        onSubmitEditing={handleAddCustomSpace}
+                        returnKeyType="done"
+                      />
+                      <TouchableOpacity
+                        onPress={handleAddCustomSpace}
+                        style={styles.customInputButton}
+                      >
+                        <Ionicons
+                          name="checkmark"
+                          size={20}
+                          color={COLORS.primary}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.addCustomButton}
+                      onPress={() => setIsAddingCustomSpace(true)}
+                    >
+                      <Ionicons name="add" size={20} color={COLORS.primary} />
+                      <Text style={styles.addCustomButtonText}>직접 입력</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ) : (
+                <View style={styles.optionsContainer}>
+                  {LAUNDRY_TYPES.map((type) => (
+                    <TouchableOpacity
+                      key={type.value}
+                      style={[
+                        styles.optionButton,
+                        selectedLaundryType === type.value &&
+                          styles.optionButtonSelected,
+                      ]}
+                      onPress={() =>
+                        setSelectedLaundryType(
+                          type.value as
+                            | "whites"
+                            | "colors"
+                            | "delicates"
+                            | "bedding"
+                            | "towels"
+                        )
                       }
-                    />
-                  </TouchableOpacity>
+                    >
+                      <Text
+                        style={[
+                          styles.optionButtonText,
+                          selectedLaundryType === type.value &&
+                            styles.optionButtonTextSelected,
+                        ]}
+                      >
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               )}
             </View>
 
-            {/* 청소 주기 */}
+            {/* 주기 선택 */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>청소 주기 *</Text>
-              <View style={styles.frequencyContainer}>
-                {frequencies.map((freq) => (
+              <Text style={styles.sectionTitle}>주기</Text>
+              <View style={styles.optionsContainer}>
+                {FREQUENCIES.map((frequency) => (
                   <TouchableOpacity
-                    key={freq.value}
+                    key={frequency.value}
                     style={[
-                      styles.frequencyButton,
-                      selectedFrequency.type === freq.value &&
-                        styles.selectedFrequencyButton,
+                      styles.optionButton,
+                      selectedFrequency.type === frequency.value &&
+                        styles.optionButtonSelected,
                     ]}
                     onPress={() =>
                       setSelectedFrequency({
-                        ...selectedFrequency,
-                        type: freq.value,
+                        type: frequency.value,
+                        daysOfWeek: [],
                       })
                     }
                   >
                     <Text
                       style={[
-                        styles.frequencyButtonText,
-                        selectedFrequency.type === freq.value &&
-                          styles.selectedFrequencyButtonText,
+                        styles.optionButtonText,
+                        selectedFrequency.type === frequency.value &&
+                          styles.optionButtonTextSelected,
                       ]}
                     >
-                      {freq.label}
+                      {frequency.label}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              {/* 요일 선택 (매주, 격주일 때만 표시) */}
+              {/* 요일 선택 (weekly, biweekly일 때) */}
               {(selectedFrequency.type === "weekly" ||
                 selectedFrequency.type === "biweekly") && (
-                <View style={styles.daySelectionContainer}>
-                  <Text style={styles.daySelectionTitle}>
-                    요일 선택 (여러 개 선택 가능)
-                  </Text>
-                  <View style={styles.dayContainer}>
-                    {daysOfWeek.map((day) => (
+                <View style={styles.daysContainer}>
+                  <Text style={styles.daysTitle}>요일 선택</Text>
+                  <View style={styles.daysGrid}>
+                    {DAYS_OF_WEEK.map((day) => (
                       <TouchableOpacity
                         key={day.value}
                         style={[
                           styles.dayButton,
                           selectedFrequency.daysOfWeek?.includes(day.value) &&
-                            styles.selectedDayButton,
+                            styles.dayButtonSelected,
                         ]}
                         onPress={() => {
                           const currentDays =
                             selectedFrequency.daysOfWeek || [];
-                          const newDays = currentDays.includes(day.value)
-                            ? currentDays.filter((d) => d !== day.value)
-                            : [...currentDays, day.value];
-
+                          const newDays = toggleDayOfWeek(
+                            currentDays,
+                            day.value
+                          );
                           setSelectedFrequency({
                             ...selectedFrequency,
                             daysOfWeek: newDays,
@@ -392,7 +487,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                           style={[
                             styles.dayButtonText,
                             selectedFrequency.daysOfWeek?.includes(day.value) &&
-                              styles.selectedDayButtonText,
+                              styles.dayButtonTextSelected,
                           ]}
                         >
                           {day.label}
@@ -402,189 +497,184 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   </View>
                 </View>
               )}
+
+              {/* 사용자 정의 일수 입력 */}
+              {selectedFrequency.type === "custom" && (
+                <View style={styles.customDaysContainer}>
+                  <Text style={styles.customDaysTitle}>일수 입력</Text>
+                  <TextInput
+                    style={styles.customDaysInput}
+                    placeholder="예: 3 (3일마다)"
+                    keyboardType="numeric"
+                    value={selectedFrequency.customDays?.toString() || ""}
+                    onChangeText={(text) =>
+                      setSelectedFrequency({
+                        ...selectedFrequency,
+                        customDays: parseInt(text) || undefined,
+                      })
+                    }
+                  />
+                </View>
+              )}
             </View>
 
             {/* 체크리스트 */}
-            {selectedSpace && (
-              <View style={styles.section}>
-                <View style={styles.checklistHeader}>
-                  <Text style={styles.sectionTitle}>세부 체크리스트</Text>
+            <View style={styles.section}>
+              <View style={styles.checklistHeader}>
+                <Text style={styles.sectionTitle}>체크리스트</Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setIsAddingChecklistItem(!isAddingChecklistItem)
+                  }
+                  style={styles.addChecklistButton}
+                >
+                  <Ionicons
+                    name={isAddingChecklistItem ? "remove" : "add"}
+                    size={20}
+                    color={COLORS.primary}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {isAddingChecklistItem && (
+                <View style={styles.addChecklistContainer}>
+                  <TextInput
+                    style={styles.checklistInput}
+                    placeholder="체크리스트 항목 추가"
+                    value={newChecklistItem}
+                    onChangeText={setNewChecklistItem}
+                    onSubmitEditing={handleAddChecklistItem}
+                    returnKeyType="done"
+                  />
                   <TouchableOpacity
-                    onPress={() =>
-                      setIsAddingChecklistItem(!isAddingChecklistItem)
-                    }
-                    style={styles.addChecklistButton}
+                    onPress={handleAddChecklistItem}
+                    style={styles.addChecklistConfirmButton}
                   >
                     <Ionicons
-                      name={isAddingChecklistItem ? "close" : "add"}
+                      name="checkmark"
                       size={20}
                       color={COLORS.primary}
                     />
                   </TouchableOpacity>
                 </View>
+              )}
 
-                {/* 새 체크리스트 항목 추가 */}
-                {isAddingChecklistItem && (
-                  <View style={styles.addChecklistContainer}>
-                    <TextInput
-                      style={styles.checklistInput}
-                      placeholder="새 체크리스트 항목을 입력하세요"
-                      placeholderTextColor="#666666"
-                      value={newChecklistItem}
-                      onChangeText={setNewChecklistItem}
-                      onSubmitEditing={handleAddChecklistItem}
-                      returnKeyType="done"
-                    />
+              {checklistItems.length > 0 ? (
+                checklistItems.map((item) => (
+                  <View key={item.id} style={styles.checklistItem}>
                     <TouchableOpacity
-                      onPress={handleAddChecklistItem}
-                      style={styles.addChecklistConfirmButton}
-                      disabled={!newChecklistItem.trim()}
+                      onPress={() => handleToggleChecklistItem(item.id)}
+                      style={styles.checklistCheckbox}
                     >
                       <Ionicons
-                        name="checkmark"
+                        name={
+                          item.isCompleted
+                            ? "checkmark-circle"
+                            : "ellipse-outline"
+                        }
                         size={20}
                         color={
-                          newChecklistItem.trim()
+                          item.isCompleted
                             ? COLORS.primary
-                            : COLORS.onBackground + "40"
+                            : COLORS.onBackground + "60"
                         }
                       />
                     </TouchableOpacity>
+                    <Text
+                      style={[
+                        styles.checklistItemText,
+                        item.isCompleted && styles.completedItemText,
+                      ]}
+                    >
+                      {item.title}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteChecklistItem(item.id)}
+                      style={styles.deleteChecklistButton}
+                    >
+                      <Ionicons name="close" size={16} color={COLORS.error} />
+                    </TouchableOpacity>
                   </View>
-                )}
-
-                {/* 체크리스트 항목들 */}
-                {checklistItems.length > 0 ? (
-                  checklistItems.map((item) => (
-                    <View key={item.id} style={styles.checklistItem}>
-                      <TouchableOpacity
-                        onPress={() => handleToggleChecklistItem(item.id)}
-                        style={styles.checklistCheckbox}
-                      >
-                        <Ionicons
-                          name={
-                            item.isCompleted
-                              ? "checkmark-circle"
-                              : "ellipse-outline"
-                          }
-                          size={20}
-                          color={
-                            item.isCompleted
-                              ? COLORS.primary
-                              : COLORS.onBackground + "60"
-                          }
-                        />
-                      </TouchableOpacity>
-                      <Text
-                        style={[
-                          styles.checklistItemText,
-                          item.isCompleted && styles.completedText,
-                        ]}
-                      >
-                        {item.title}
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() => handleDeleteChecklistItem(item.id)}
-                        style={styles.deleteChecklistButton}
-                      >
-                        <Ionicons
-                          name="trash-outline"
-                          size={16}
-                          color={COLORS.error}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  ))
-                ) : (
-                  <View style={styles.emptyChecklistContainer}>
-                    <Ionicons
-                      name="list-outline"
-                      size={32}
-                      color={COLORS.onBackground + "40"}
-                    />
-                    <View>
-                      <Text style={styles.emptyChecklistText}>
-                        공간을 선택하면 기본 체크리스트가 추가됩니다.
-                      </Text>
-                      <Text style={styles.emptyChecklistText}>
-                        + 버튼으로 추가 항목을 만들 수 있습니다!
-                      </Text>
-                    </View>
-                  </View>
-                )}
-              </View>
-            )}
+                ))
+              ) : (
+                <Text style={styles.emptyChecklist}>
+                  체크리스트 항목이 없습니다.
+                </Text>
+              )}
+            </View>
           </ScrollView>
-
-          {/* 하단 액션 버튼 */}
-          <View style={styles.footer}>
-            <TouchableOpacity onPress={handleClose} style={styles.cancelButton}>
-              <Text style={styles.cancelButtonText}>취소</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSaveTask}
-              style={[
-                styles.saveButton,
-                !isFormValid() && styles.saveButtonDisabled,
-              ]}
-              disabled={!isFormValid()}
-            >
-              <Text
-                style={[
-                  styles.saveButtonText,
-                  !isFormValid() && styles.saveButtonTextDisabled,
-                ]}
-              >
-                저장
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContainer: {
     backgroundColor: COLORS.background,
-    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     maxHeight: height * 0.9,
-    minHeight: height * 0.6,
-    width: width * 0.9,
-    shadowColor: COLORS.onBackground,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 10,
+    minHeight: height * 0.5,
+    flex: 1,
   },
-  header: {
-    padding: 20,
-    paddingBottom: 15,
+  modalHeader: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.onBackground + "15",
+    borderBottomColor: COLORS.onBackground + "20",
+  },
+  headerTop: {
+    alignItems: "center",
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: COLORS.onBackground + "30",
+    borderRadius: 2,
   },
   headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-  },
-  headerTitle: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
+    padding: 20,
   },
   closeButton: {
     padding: 4,
   },
-  content: {
+  modalTitle: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.onBackground,
+    fontWeight: "600",
+  },
+  saveButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  saveButtonDisabled: {
+    backgroundColor: COLORS.onBackground + "30",
+  },
+  saveButtonText: {
+    ...TYPOGRAPHY.button,
+    color: COLORS.onPrimary,
+  },
+  saveButtonTextDisabled: {
+    color: COLORS.onBackground + "60",
+  },
+  modalContent: {
     flex: 1,
     padding: 20,
+    paddingBottom: 40,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   section: {
     marginBottom: 24,
@@ -593,138 +683,154 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.h4,
     color: COLORS.onBackground,
     marginBottom: 12,
+    fontWeight: "600",
+  },
+  categoryContainer: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  categoryButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.onBackground + "20",
+    backgroundColor: COLORS.surface,
+  },
+  categoryButtonSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
+  },
+  categoryButtonText: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground,
+    marginLeft: 8,
+    fontWeight: "500",
+  },
+  categoryButtonTextSelected: {
+    color: COLORS.onPrimary,
   },
   titleInput: {
-    ...TYPOGRAPHY.body1,
-    color: COLORS.onBackground,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "20",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: COLORS.surface,
-    height: 48,
-    textAlignVertical: "center",
+    borderColor: COLORS.onBackground + "30",
+    borderRadius: 8,
+    padding: 12,
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground,
   },
-  spaceContainer: {
+  optionsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
-  spaceButton: {
+  optionButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "20",
+    borderColor: COLORS.onBackground + "30",
     backgroundColor: COLORS.surface,
   },
-  selectedSpaceButton: {
-    backgroundColor: COLORS.primary,
+  optionButtonSelected: {
     borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
   },
-  spaceButtonText: {
+  optionButtonText: {
     ...TYPOGRAPHY.body2,
     color: COLORS.onBackground,
   },
-  selectedSpaceButtonText: {
+  optionButtonTextSelected: {
     color: COLORS.onPrimary,
     fontWeight: "600",
   },
-  addCustomSpaceButton: {
+  customInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 12,
-    paddingVertical: 8,
+    gap: 8,
   },
-  addCustomSpaceText: {
+  customInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: COLORS.onBackground + "30",
+    borderRadius: 8,
+    padding: 8,
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground,
+  },
+  customInputButton: {
+    padding: 8,
+    backgroundColor: COLORS.primary + "20",
+    borderRadius: 8,
+  },
+  addCustomButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary + "10",
+  },
+  addCustomButtonText: {
     ...TYPOGRAPHY.body2,
     color: COLORS.primary,
-    marginLeft: 8,
-  },
-  customSpaceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 8,
-  },
-  customSpaceInput: {
-    flex: 1,
-    ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  addCustomSpaceConfirmButton: {
-    padding: 8,
     marginLeft: 4,
+    fontWeight: "500",
   },
-  frequencyContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  frequencyButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.onBackground + "20",
-    backgroundColor: COLORS.surface,
-  },
-  selectedFrequencyButton: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  frequencyButtonText: {
-    ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
-  },
-  selectedFrequencyButtonText: {
-    color: COLORS.onPrimary,
-    fontWeight: "600",
-  },
-  daySelectionContainer: {
+  daysContainer: {
     marginTop: 16,
   },
-  daySelectionTitle: {
+  daysTitle: {
     ...TYPOGRAPHY.body2,
     color: COLORS.onBackground,
     marginBottom: 8,
     fontWeight: "500",
   },
-  dayContainer: {
+  daysGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 8,
   },
   dayButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "20",
+    borderColor: COLORS.onBackground + "30",
     backgroundColor: COLORS.surface,
   },
-  selectedDayButton: {
-    backgroundColor: COLORS.primary,
+  dayButtonSelected: {
     borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
   },
   dayButtonText: {
     ...TYPOGRAPHY.caption,
     color: COLORS.onBackground,
   },
-  selectedDayButtonText: {
+  dayButtonTextSelected: {
     color: COLORS.onPrimary,
     fontWeight: "600",
   },
-  selectedDaysText: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.primary,
-    marginTop: 8,
-    fontStyle: "italic",
+  customDaysContainer: {
+    marginTop: 16,
+  },
+  customDaysTitle: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground,
+    marginBottom: 8,
+    fontWeight: "500",
+  },
+  customDaysInput: {
+    borderWidth: 1,
+    borderColor: COLORS.onBackground + "30",
+    borderRadius: 8,
+    padding: 12,
+    ...TYPOGRAPHY.body2,
+    color: COLORS.onBackground,
   },
   checklistHeader: {
     flexDirection: "row",
@@ -733,103 +839,58 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   addChecklistButton: {
-    backgroundColor: COLORS.primary + "20",
-    padding: 6,
-    borderRadius: 16,
+    padding: 8,
   },
   addChecklistContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 8,
   },
   checklistInput: {
     flex: 1,
+    borderWidth: 1,
+    borderColor: COLORS.onBackground + "30",
+    borderRadius: 8,
+    padding: 12,
+    marginRight: 8,
     ...TYPOGRAPHY.body2,
     color: COLORS.onBackground,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
   },
   addChecklistConfirmButton: {
-    padding: 8,
-    marginLeft: 4,
+    padding: 12,
+    backgroundColor: COLORS.primary + "20",
+    borderRadius: 8,
   },
   checklistItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 8,
-    paddingHorizontal: 4,
-    marginBottom: 4,
+    paddingHorizontal: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   checklistCheckbox: {
     marginRight: 12,
-    padding: 2,
   },
   checklistItemText: {
     flex: 1,
     ...TYPOGRAPHY.body2,
     color: COLORS.onBackground,
   },
-  completedText: {
+  completedItemText: {
     textDecorationLine: "line-through",
     color: COLORS.onBackground + "60",
   },
   deleteChecklistButton: {
     padding: 4,
-    marginLeft: 8,
   },
-  emptyChecklistContainer: {
-    alignItems: "center",
-    paddingVertical: 20,
-  },
-  emptyChecklistText: {
+  emptyChecklist: {
     ...TYPOGRAPHY.body2,
     color: COLORS.onBackground + "60",
-    fontStyle: "italic",
     textAlign: "center",
-    paddingVertical: 12,
-    lineHeight: 18,
-  },
-  footer: {
-    flexDirection: "row",
-    padding: 20,
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.onBackground + "15",
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.onBackground + "20",
-    backgroundColor: COLORS.surface,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    ...TYPOGRAPHY.button,
-    color: COLORS.onBackground,
-  },
-  saveButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-  },
-  saveButtonText: {
-    ...TYPOGRAPHY.button,
-    color: COLORS.onPrimary,
-  },
-  saveButtonDisabled: {
-    backgroundColor: COLORS.primary + "40",
-    opacity: 0.6,
-  },
-  saveButtonTextDisabled: {
-    color: COLORS.onPrimary + "80",
+    fontStyle: "italic",
+    paddingVertical: 20,
   },
 });
 

@@ -11,147 +11,37 @@ import { COLORS, TYPOGRAPHY } from "../constants";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
 import AddTaskModal from "../components/AddTaskModal";
-import { CleaningTask } from "../types";
+import { HouseholdTask } from "../types";
 import { useNavigation } from "@react-navigation/native";
+import { useTaskManagement } from "../hooks/useTaskManagement";
+import {
+  FILTER_OPTIONS,
+  SPACES_FOR_FILTER,
+  STAT_CARDS,
+} from "../data/taskManagementData";
 
 const TaskManagementScreen: React.FC = () => {
   const navigation = useNavigation();
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
-  // 임시 데이터
-  const [allTasks, setAllTasks] = useState<CleaningTask[]>([
-    {
-      id: "1",
-      title: "거실 청소",
-      description: "바닥 쓸기, 먼지 털기",
-      space: "거실",
-      frequency: { type: "daily" },
-      isCompleted: false,
-      checklistItems: [
-        {
-          id: "1-1",
-          title: "바닥 쓸기",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "1-2",
-          title: "먼지 털기",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "1-3",
-          title: "가구 정리",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "2",
-      title: "주방 정리",
-      description: "설거지, 주방 정리",
-      space: "주방",
-      frequency: { type: "daily" },
-      isCompleted: true,
-      checklistItems: [
-        {
-          id: "2-1",
-          title: "설거지",
-          isCompleted: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "2-2",
-          title: "주방 카운터 정리",
-          isCompleted: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "3",
-      title: "욕실 청소",
-      description: "변기, 세면대, 샤워기 청소",
-      space: "욕실",
-      frequency: { type: "weekly", daysOfWeek: ["monday"] },
-      isCompleted: false,
-      checklistItems: [
-        {
-          id: "3-1",
-          title: "변기 청소",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "3-2",
-          title: "세면대 청소",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "3-3",
-          title: "샤워기 청소",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ]);
-
-  const getTasksBySpace = (space: string) => {
-    return allTasks.filter((task) => task.space === space);
-  };
-
-  const spaces = ["거실", "주방", "욕실", "화장실", "침실"];
-
-  const handleToggleTask = (taskId: string) => {
-    setAllTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              isCompleted: !task.isCompleted,
-              lastCompleted: !task.isCompleted ? new Date() : undefined,
-              updatedAt: new Date(),
-            }
-          : task
-      )
-    );
-  };
+  const {
+    tasks,
+    stats,
+    selectedFilter,
+    handleToggleTask,
+    handleUpdateTask,
+    handleDeleteTask,
+    handleAddTask,
+    handleFilterChange,
+  } = useTaskManagement();
 
   const handleEditTask = (taskId: string) => {
     console.log("편집할 작업 ID:", taskId);
     // navigation.navigate("EditTask", { taskId });
   };
 
-  const handleUpdateTask = (updatedTask: CleaningTask) => {
-    setAllTasks((prevTasks) =>
-      prevTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
-    );
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    setAllTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-  };
-
-  const handleAddTask = (newTask: CleaningTask) => {
-    setAllTasks((prevTasks) => [...prevTasks, newTask]);
+  const handleAddTaskAndClose = (newTask: HouseholdTask) => {
+    handleAddTask(newTask);
     setIsAddModalVisible(false);
   };
 
@@ -171,36 +61,79 @@ const TaskManagementScreen: React.FC = () => {
         <View style={styles.filtersContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TouchableOpacity
-              style={[styles.filterButton, styles.activeFilter]}
+              style={[
+                styles.filterButton,
+                selectedFilter === FILTER_OPTIONS.ALL && styles.activeFilter,
+              ]}
+              onPress={() => handleFilterChange(FILTER_OPTIONS.ALL)}
             >
-              <Text style={[styles.filterText, styles.activeFilterText]}>
-                전체
+              <Text
+                style={[
+                  styles.filterText,
+                  selectedFilter === FILTER_OPTIONS.ALL &&
+                    styles.activeFilterText,
+                ]}
+              >
+                {FILTER_OPTIONS.ALL}
               </Text>
             </TouchableOpacity>
-            {spaces.map((space) => (
-              <TouchableOpacity key={space} style={styles.filterButton}>
-                <Text style={styles.filterText}>{space}</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                selectedFilter === FILTER_OPTIONS.CLEANING &&
+                  styles.activeFilter,
+              ]}
+              onPress={() => handleFilterChange(FILTER_OPTIONS.CLEANING)}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  selectedFilter === FILTER_OPTIONS.CLEANING &&
+                    styles.activeFilterText,
+                ]}
+              >
+                {FILTER_OPTIONS.CLEANING}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                selectedFilter === FILTER_OPTIONS.LAUNDRY &&
+                  styles.activeFilter,
+              ]}
+              onPress={() => handleFilterChange(FILTER_OPTIONS.LAUNDRY)}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  selectedFilter === FILTER_OPTIONS.LAUNDRY &&
+                    styles.activeFilterText,
+                ]}
+              >
+                {FILTER_OPTIONS.LAUNDRY}
+              </Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Ionicons name="list" size={24} color={COLORS.primary} />
-            <Text style={styles.statNumber}>{allTasks.length}</Text>
-            <Text style={styles.statLabel}>전체 작업</Text>
+            <Ionicons
+              name={STAT_CARDS[0].icon}
+              size={24}
+              color={COLORS[STAT_CARDS[0].color]}
+            />
+            <Text style={styles.statNumber}>{stats.totalTasks}</Text>
+            <Text style={styles.statLabel}>{STAT_CARDS[0].label}</Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons
-              name="checkmark-circle"
+              name={STAT_CARDS[1].icon}
               size={24}
-              color={COLORS.secondary}
+              color={COLORS[STAT_CARDS[1].color]}
             />
-            <Text style={styles.statNumber}>
-              {allTasks.filter((task) => task.isCompleted).length}
-            </Text>
-            <Text style={styles.statLabel}>완료된 작업</Text>
+            <Text style={styles.statNumber}>{stats.completedTasks}</Text>
+            <Text style={styles.statLabel}>{STAT_CARDS[1].label}</Text>
           </View>
         </View>
 
@@ -215,8 +148,8 @@ const TaskManagementScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {allTasks.length > 0 ? (
-            allTasks.map((task) => (
+          {tasks.length > 0 ? (
+            tasks.map((task) => (
               <CleaningTaskItem
                 key={task.id}
                 task={task}
@@ -235,15 +168,13 @@ const TaskManagementScreen: React.FC = () => {
                   color={COLORS.onBackground + "40"}
                 />
               </View>
-              <Text style={styles.emptyStateTitle}>
-                아직 청소 작업이 없어요! 📝
-              </Text>
+              <Text style={styles.emptyStateTitle}>아직 작업이 없어요! 📝</Text>
               <View>
                 <Text style={styles.emptyStateDescription}>
-                  첫 번째 청소 작업을 추가해보세요.
+                  첫 번째 가사 작업을 추가해보세요.
                 </Text>
                 <Text style={styles.emptyStateDescription}>
-                  정기적인 청소 습관을 만들어보세요.
+                  정기적인 가사 습관을 만들어보세요.
                 </Text>
               </View>
               <TouchableOpacity
@@ -263,7 +194,7 @@ const TaskManagementScreen: React.FC = () => {
       <AddTaskModal
         visible={isAddModalVisible}
         onClose={() => setIsAddModalVisible(false)}
-        onAddTask={handleAddTask}
+        onAddTask={handleAddTaskAndClose}
       />
     </View>
   );

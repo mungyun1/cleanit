@@ -11,7 +11,7 @@ import { COLORS, TYPOGRAPHY } from "../constants";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
 import AddTaskModal from "../components/AddTaskModal";
-import { CleaningTask } from "../types";
+import { HouseholdTask } from "../types";
 
 const HomeScreen: React.FC = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -57,7 +57,7 @@ const HomeScreen: React.FC = () => {
     // navigation.navigate("EditTask", { taskId });
   };
 
-  const handleUpdateTask = (updatedTask: CleaningTask) => {
+  const handleUpdateTask = (updatedTask: HouseholdTask) => {
     setTodayTasks((prevTasks) =>
       prevTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
     );
@@ -69,17 +69,18 @@ const HomeScreen: React.FC = () => {
     );
   };
 
-  const handleAddTask = (newTask: CleaningTask) => {
+  const handleAddTask = (newTask: HouseholdTask) => {
     setTodayTasks((prevTasks) => [...prevTasks, newTask]);
     setIsAddModalVisible(false);
   };
 
-  // 임시 데이터
-  const [todayTasks, setTodayTasks] = useState<CleaningTask[]>([
+  // 임시 데이터 (청소 + 빨래)
+  const [todayTasks, setTodayTasks] = useState<HouseholdTask[]>([
     {
       id: "1",
       title: "거실 청소",
       description: "바닥 쓸기, 먼지 털기",
+      category: "cleaning",
       space: "거실",
       frequency: { type: "daily" },
       isCompleted: false,
@@ -106,6 +107,7 @@ const HomeScreen: React.FC = () => {
       id: "2",
       title: "주방 정리",
       description: "설거지, 주방 정리",
+      category: "cleaning",
       space: "주방",
       frequency: { type: "daily" },
       isCompleted: true,
@@ -128,7 +130,91 @@ const HomeScreen: React.FC = () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     },
+    {
+      id: "3",
+      title: "흰 옷 빨래",
+      description: "흰색 옷들 세탁하기",
+      category: "laundry",
+      laundryType: "whites",
+      frequency: { type: "weekly" },
+      isCompleted: false,
+      checklistItems: [
+        {
+          id: "3-1",
+          title: "흰 옷 분류하기",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "3-2",
+          title: "세제 넣고 세탁",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "3-3",
+          title: "건조기 돌리기",
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: "4",
+      title: "침구 세탁",
+      description: "침대 시트, 이불 세탁",
+      category: "laundry",
+      laundryType: "bedding",
+      frequency: { type: "biweekly" },
+      isCompleted: true,
+      checklistItems: [
+        {
+          id: "4-1",
+          title: "침구 분리하기",
+          isCompleted: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "4-2",
+          title: "세탁 및 건조",
+          isCompleted: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
   ]);
+
+  // 통계 계산
+  const getStats = () => {
+    const totalTasks = todayTasks.length;
+    const completedTasks = todayTasks.filter((task) => task.isCompleted).length;
+    const remainingTasks = totalTasks - completedTasks;
+    const cleaningTasks = todayTasks.filter(
+      (task) => task.category === "cleaning"
+    ).length;
+    const laundryTasks = todayTasks.filter(
+      (task) => task.category === "laundry"
+    ).length;
+
+    return {
+      total: totalTasks,
+      completed: completedTasks,
+      remaining: remainingTasks,
+      cleaning: cleaningTasks,
+      laundry: laundryTasks,
+    };
+  };
+
+  const stats = getStats();
 
   return (
     <View style={styles.container}>
@@ -137,7 +223,7 @@ const HomeScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Header title="🏠 청소 체크리스트" subtitle="체크리스트를 확인하세요" />
+        <Header title="🏠 가사 관리" subtitle="청소와 빨래를 체크하세요" />
 
         {/* 오늘 날짜 표시 */}
         <View style={styles.dateContainer}>
@@ -157,21 +243,38 @@ const HomeScreen: React.FC = () => {
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>5</Text>
-            <Text style={styles.statLabel}>오늘 할 일</Text>
+            <Text style={styles.statNumber}>{stats.total}</Text>
+            <Text style={styles.statLabel}>전체</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>3</Text>
+            <Text style={styles.statNumber}>{stats.completed}</Text>
             <Text style={styles.statLabel}>완료</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>2</Text>
+            <Text style={styles.statNumber}>{stats.remaining}</Text>
             <Text style={styles.statLabel}>남은 일</Text>
           </View>
         </View>
 
+        <View style={styles.categoryStatsContainer}>
+          <View style={styles.categoryStatCard}>
+            <View style={styles.categoryIcon}>
+              <Ionicons name="brush" size={20} color={COLORS.primary} />
+            </View>
+            <Text style={styles.categoryStatNumber}>{stats.cleaning}</Text>
+            <Text style={styles.categoryStatLabel}>청소</Text>
+          </View>
+          <View style={styles.categoryStatCard}>
+            <View style={styles.categoryIcon}>
+              <Ionicons name="shirt" size={20} color={COLORS.secondary} />
+            </View>
+            <Text style={styles.categoryStatNumber}>{stats.laundry}</Text>
+            <Text style={styles.categoryStatLabel}>빨래</Text>
+          </View>
+        </View>
+
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>오늘의 청소</Text>
+          <Text style={styles.sectionTitle}>오늘의 가사</Text>
           {todayTasks.length > 0 ? (
             todayTasks.map((task) => (
               <CleaningTaskItem
@@ -196,7 +299,7 @@ const HomeScreen: React.FC = () => {
                 예정된 작업이 없습니다🧹
               </Text>
               <Text style={styles.emptyStateDescription}>
-                새로운 작업을 추가해보세요.
+                새로운 청소나 빨래 작업을 추가해보세요.
               </Text>
             </View>
           )}
@@ -321,7 +424,7 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: "row",
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   statCard: {
     flex: 1,
@@ -342,6 +445,37 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   statLabel: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.onBackground + "80",
+  },
+  categoryStatsContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  categoryStatCard: {
+    flex: 1,
+    backgroundColor: COLORS.surface,
+    padding: 15,
+    marginHorizontal: 5,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: COLORS.onBackground,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  categoryIcon: {
+    marginBottom: 8,
+  },
+  categoryStatNumber: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.onBackground,
+    marginBottom: 3,
+    fontWeight: "600",
+  },
+  categoryStatLabel: {
     ...TYPOGRAPHY.caption,
     color: COLORS.onBackground + "80",
   },

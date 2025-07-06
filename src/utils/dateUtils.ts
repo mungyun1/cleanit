@@ -76,3 +76,42 @@ export const formatTime = (time: string): string => {
   const [hours, minutes] = time.split(":");
   return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
 };
+
+// 날짜가 특정 주기 설정에 따라 다음 예정일을 반환
+export const getNextDueDate = (
+  lastCompleted: Date | undefined,
+  createdAt: Date,
+  frequency: any // FrequencySettings 타입 import 루프 방지, 실제 사용처에서 타입 지정
+): string => {
+  const baseDate = lastCompleted
+    ? new Date(lastCompleted)
+    : new Date(createdAt);
+  let nextDue = new Date(baseDate);
+
+  switch (frequency.type) {
+    case "daily":
+      nextDue.setDate(baseDate.getDate() + 1);
+      break;
+    case "weekly":
+      nextDue.setDate(baseDate.getDate() + 7);
+      break;
+    case "biweekly":
+      nextDue.setDate(baseDate.getDate() + 14);
+      break;
+    case "monthly":
+      nextDue.setMonth(baseDate.getMonth() + 1);
+      break;
+    case "custom":
+      if (frequency.customDays) {
+        nextDue.setDate(baseDate.getDate() + frequency.customDays);
+      }
+      break;
+  }
+
+  return nextDue.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+};

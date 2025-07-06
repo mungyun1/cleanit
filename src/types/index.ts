@@ -7,18 +7,32 @@ export interface ChecklistItem {
   updatedAt: Date;
 }
 
-// 청소 항목 타입
-export interface CleaningTask {
+// 가사 작업 타입 (청소 + 빨래)
+export interface HouseholdTask {
   id: string;
   title: string;
   description?: string;
-  space: string; // 공간 (거실, 주방, 욕실 등)
+  category: "cleaning" | "laundry"; // 청소 또는 빨래
+  space?: string; // 청소용 공간 (거실, 주방, 욕실 등)
+  laundryType?: "whites" | "colors" | "delicates" | "bedding" | "towels"; // 빨래용 타입
   frequency: FrequencySettings;
   lastCompleted?: Date;
   isCompleted: boolean;
   checklistItems: ChecklistItem[]; // 세부 체크리스트
   createdAt: Date;
   updatedAt: Date;
+}
+
+// 기존 CleaningTask는 호환성을 위해 유지
+export interface CleaningTask extends HouseholdTask {
+  category: "cleaning";
+  space: string;
+}
+
+// 빨래 작업 타입
+export interface LaundryTask extends HouseholdTask {
+  category: "laundry";
+  laundryType: "whites" | "colors" | "delicates" | "bedding" | "towels";
 }
 
 // 청소 주기 타입
@@ -49,6 +63,15 @@ export interface Space {
   icon: string;
 }
 
+// 빨래 타입 설정
+export interface LaundryType {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  description: string;
+}
+
 // 완료 기록 타입
 export interface CompletionRecord {
   id: string;
@@ -66,11 +89,13 @@ export interface UserSettings {
 }
 
 // 통계 타입
-export interface CleaningStats {
+export interface HouseholdStats {
   totalTasks: number;
   completedThisWeek: number;
   completedThisMonth: number;
   streak: number; // 연속 완료 일수
+  cleaningTasks: number;
+  laundryTasks: number;
 }
 
 // 네비게이션 타입
