@@ -12,6 +12,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
 import AddTaskModal from "../components/AddTaskModal";
+import SectionHeader from "../components/SectionHeader";
 import { HouseholdTask } from "../types";
 import { useNavigation } from "@react-navigation/native";
 import { useTaskManagement } from "../hooks/useTaskManagement";
@@ -184,20 +185,10 @@ const TaskManagementScreen: React.FC = () => {
         </View>
 
         <View style={styles.tasksContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>
-              모든 작업
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.addButton,
-                { backgroundColor: colors.primary + "20" },
-              ]}
-              onPress={() => setIsAddModalVisible(true)}
-            >
-              <Ionicons name="add" size={20} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
+          <SectionHeader
+            title="모든 작업"
+            onAddPress={() => setIsAddModalVisible(true)}
+          />
 
           {tasks.length > 0 ? (
             tasks.map((task) => (
@@ -328,21 +319,6 @@ const styles = StyleSheet.create({
   tasksContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    ...TYPOGRAPHY.h3,
-  },
-  addButton: {
-    padding: 8,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
   },
   emptyStateContainer: {
     alignItems: "center",

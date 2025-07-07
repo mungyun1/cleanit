@@ -12,6 +12,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
 import AddTaskModal from "../components/AddTaskModal";
+import SectionHeader from "../components/SectionHeader";
 import { HouseholdTask } from "../types";
 
 const HomeScreen: React.FC = () => {
@@ -408,9 +409,10 @@ const HomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>
-            오늘의 가사
-          </Text>
+          <SectionHeader
+            title="오늘의 가사"
+            onAddPress={() => setIsAddModalVisible(true)}
+          />
           {todayTasks.length > 0 ? (
             todayTasks.map((task) => (
               <CleaningTaskItem
@@ -447,15 +449,6 @@ const HomeScreen: React.FC = () => {
             </View>
           )}
         </View>
-
-        <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: colors.primary }]}
-          onPress={() => setIsAddModalVisible(true)}
-        >
-          <Text style={[styles.addButtonText, { color: colors.onPrimary }]}>
-            + 새 작업 추가
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
 
       <AddTaskModal

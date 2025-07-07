@@ -14,7 +14,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { HouseholdTask, ChecklistItem, FrequencySettings } from "../types";
 import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
-import { formatDate, getNextDueDate } from "../utils/dateUtils";
+import {
+  formatDate as originalFormatDate,
+  getNextDueDate,
+} from "../utils/dateUtils";
 import {
   getSpaceColor,
   getLaundryTypeColor,
@@ -33,6 +36,26 @@ interface TaskDetailModalProps {
 }
 
 const { width, height } = Dimensions.get("window");
+
+// formatDate를 한글 요일까지 포함하는 포맷으로 재정의
+function formatDate(date: Date) {
+  if (!date) return "";
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const dayNames = [
+    "일요일",
+    "월요일",
+    "화요일",
+    "수요일",
+    "목요일",
+    "금요일",
+    "토요일",
+  ];
+  const dayName = dayNames[d.getDay()];
+  return `${year}년 ${month}월 ${day}일 ${dayName}`;
+}
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   task,
@@ -174,16 +197,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             <Text style={[styles.modalTitle, { color: colors.onBackground }]}>
               작업 상세
             </Text>
-            <View style={styles.headerActions}>
-              {onDeleteTask && (
-                <TouchableOpacity
-                  onPress={handleDeleteTask}
-                  style={styles.deleteButton}
-                >
-                  <Ionicons name="trash" size={20} color={colors.error} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <View style={styles.headerActions} />
           </View>
 
           <ScrollView
@@ -231,6 +245,46 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   {task.description}
                 </Text>
               )}
+
+              <TouchableOpacity
+                onPress={() => {
+                  onToggleComplete?.();
+                  // if (!task.isCompleted) {
+                  //   onClose();
+                  // }
+                }}
+                style={[
+                  styles.completeButtonTop,
+                  {
+                    backgroundColor: colors.primary + "20",
+                    borderColor: colors.primary,
+                  },
+                  task.isCompleted && [
+                    styles.completedButtonTop,
+                    { backgroundColor: colors.primary },
+                  ],
+                ]}
+              >
+                <Ionicons
+                  name={
+                    task.isCompleted ? "checkmark-circle" : "ellipse-outline"
+                  }
+                  size={20}
+                  color={task.isCompleted ? colors.onPrimary : colors.primary}
+                />
+                <Text
+                  style={[
+                    styles.completeButtonText,
+                    { color: colors.primary },
+                    task.isCompleted && [
+                      styles.completedButtonText,
+                      { color: colors.onPrimary },
+                    ],
+                  ]}
+                >
+                  {task.isCompleted ? "완료됨" : "완료하기"}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <View
@@ -252,23 +306,23 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </Text>
               </View>
 
-              {task.lastCompleted && (
-                <View style={styles.infoRow}>
-                  <Text
-                    style={[
-                      styles.infoLabel,
-                      { color: colors.onBackground + "60" },
-                    ]}
-                  >
-                    마지막 작업
-                  </Text>
-                  <Text
-                    style={[styles.infoValue, { color: colors.onBackground }]}
-                  >
-                    {formatDate(task.lastCompleted)}
-                  </Text>
-                </View>
-              )}
+              <View style={styles.infoRow}>
+                <Text
+                  style={[
+                    styles.infoLabel,
+                    { color: colors.onBackground + "60" },
+                  ]}
+                >
+                  마지막 작업
+                </Text>
+                <Text
+                  style={[styles.infoValue, { color: colors.onBackground }]}
+                >
+                  {task.lastCompleted
+                    ? formatDate(task.lastCompleted)
+                    : "기록 없음"}
+                </Text>
+              </View>
 
               <View style={styles.infoRow}>
                 <Text
@@ -412,26 +466,58 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               { borderTopColor: colors.onBackground + "20" },
             ]}
           >
-            <View style={styles.footerButtons}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 12,
+              }}
+            >
+              {onDeleteTask && (
+                <TouchableOpacity
+                  onPress={handleDeleteTask}
+                  style={[
+                    styles.deleteFooterButton,
+                    {
+                      backgroundColor: colors.error,
+                      borderColor: colors.error,
+                      borderWidth: 1,
+                    },
+                  ]}
+                >
+                  <Ionicons name="trash" size={16} color={colors.onPrimary} />
+                  <Text
+                    style={[
+                      styles.deleteFooterButtonText,
+                      { color: colors.onPrimary },
+                    ]}
+                  >
+                    삭제
+                  </Text>
+                </TouchableOpacity>
+              )}
               {onEdit && (
                 <TouchableOpacity
                   onPress={hasChanges ? onEdit : undefined}
                   style={[
                     styles.editButton,
                     {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.primary,
+                      backgroundColor: hasChanges
+                        ? colors.primary + "10"
+                        : colors.surface,
+                      borderColor: hasChanges
+                        ? colors.primary + "40"
+                        : colors.onBackground + "10",
+                      flex: 1,
                     },
-                    !hasChanges && [
-                      styles.editButtonDisabled,
-                      { opacity: 0.4 },
-                    ],
+                    !hasChanges && styles.editButtonDisabled,
                   ]}
                   disabled={!hasChanges}
+                  activeOpacity={hasChanges ? 0.7 : 1}
                 >
                   <Ionicons
                     name="pencil"
-                    size={20}
+                    size={16}
                     color={
                       hasChanges ? colors.primary : colors.onBackground + "40"
                     }
@@ -439,56 +525,17 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <Text
                     style={[
                       styles.editButtonText,
-                      { color: colors.primary },
-                      !hasChanges && [
-                        styles.editButtonTextDisabled,
-                        { color: colors.onBackground + "40" },
-                      ],
+                      {
+                        color: hasChanges
+                          ? colors.primary
+                          : colors.onBackground + "40",
+                      },
                     ]}
                   >
-                    수정하기
+                    수정
                   </Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity
-                onPress={() => {
-                  onToggleComplete?.();
-                  if (!task.isCompleted) {
-                    onClose();
-                  }
-                }}
-                style={[
-                  styles.completeButton,
-                  {
-                    backgroundColor: colors.primary + "20",
-                    borderColor: colors.primary,
-                  },
-                  task.isCompleted && [
-                    styles.completedButton,
-                    { backgroundColor: colors.primary },
-                  ],
-                ]}
-              >
-                <Ionicons
-                  name={
-                    task.isCompleted ? "checkmark-circle" : "ellipse-outline"
-                  }
-                  size={20}
-                  color={task.isCompleted ? colors.onPrimary : colors.primary}
-                />
-                <Text
-                  style={[
-                    styles.completeButtonText,
-                    { color: colors.primary },
-                    task.isCompleted && [
-                      styles.completedButtonText,
-                      { color: colors.onPrimary },
-                    ],
-                  ]}
-                >
-                  {task.isCompleted ? "완료됨" : "완료하기"}
-                </Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -506,8 +553,8 @@ const styles = StyleSheet.create({
   modalContainer: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: height * 0.9, // 0.98 → 0.9로 변경
-    overflow: "hidden", // 추가
+    maxHeight: height * 0.9,
+    overflow: "hidden",
   },
   modalHeader: {
     flexDirection: "row",
@@ -522,29 +569,33 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...TYPOGRAPHY.h3,
     fontWeight: "600",
+    marginRight: 24,
   },
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
   },
   editButton: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
-    borderRadius: 12,
+    paddingHorizontal: 0,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignSelf: "center",
+    minWidth: 90,
+    minHeight: 48,
+    backgroundColor: undefined, // 동적으로 적용
+    borderColor: undefined, // 동적으로 적용
     borderWidth: 1,
   },
   editButtonText: {
-    ...TYPOGRAPHY.button,
-    marginLeft: 8,
+    marginLeft: 5,
+    fontSize: 16,
+    fontWeight: "600",
   },
   editButtonDisabled: {
-    // opacity는 인라인으로 적용
-  },
-  editButtonTextDisabled: {
-    // color는 인라인으로 적용
+    opacity: 1,
   },
   deleteButton: {
     padding: 8,
@@ -579,6 +630,19 @@ const styles = StyleSheet.create({
   taskDescription: {
     ...TYPOGRAPHY.body2,
     lineHeight: 20,
+    marginBottom: 16,
+  },
+  completeButtonTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 8,
+  },
+  completedButtonTop: {
+    // backgroundColor는 인라인으로 적용
   },
   infoSection: {
     padding: 16,
@@ -659,24 +723,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   modalFooter: {
-    padding: 20,
-    borderTopWidth: 1,
-  },
-  footerButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  completeButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  completedButton: {
-    // backgroundColor는 인라인으로 적용
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
   },
   completeButtonText: {
     ...TYPOGRAPHY.button,
@@ -684,6 +733,23 @@ const styles = StyleSheet.create({
   },
   completedButtonText: {
     // color는 인라인으로 적용
+  },
+  deleteFooterButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 0,
+    paddingVertical: 14,
+    borderRadius: 14,
+    minWidth: 90,
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  deleteFooterButtonText: {
+    marginLeft: 5,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
