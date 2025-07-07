@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { COLORS, TYPOGRAPHY } from "../constants";
+import { TYPOGRAPHY } from "../constants";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface HeaderProps {
   title: string;
@@ -13,12 +14,22 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          <Text style={[styles.title, { color: colors.onBackground }]}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Text
+              style={[styles.subtitle, { color: colors.onBackground + "70" }]}
+            >
+              {subtitle}
+            </Text>
+          )}
         </View>
       </View>
     </View>
@@ -27,7 +38,6 @@ const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.background,
     paddingTop: 16,
     paddingBottom: 12,
   },
@@ -44,14 +54,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.h1,
-    color: COLORS.onBackground,
     fontSize: 28,
     fontWeight: "700",
     letterSpacing: -0.5,
   },
   subtitle: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "70",
     marginTop: 4,
     fontSize: 16,
     fontWeight: "400",

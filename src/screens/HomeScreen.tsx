@@ -7,13 +7,15 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, TYPOGRAPHY } from "../constants";
+import { TYPOGRAPHY } from "../constants";
+import { useTheme } from "../contexts/ThemeContext";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
 import AddTaskModal from "../components/AddTaskModal";
 import { HouseholdTask } from "../types";
 
 const HomeScreen: React.FC = () => {
+  const { colors } = useTheme();
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   // 오늘 날짜 포맷팅
   const getTodayDate = () => {
@@ -217,64 +219,198 @@ const HomeScreen: React.FC = () => {
   const stats = getStats();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Header title="🏠 가사 관리" subtitle="청소와 빨래를 체크하세요" />
+        <Header
+          title="🏠 가사 관리"
+          subtitle="오늘 할 청소와 빨래를 확인하세요"
+        />
 
         {/* 오늘 날짜 표시 */}
         <View style={styles.dateContainer}>
-          <View style={styles.dateCard}>
+          <View
+            style={[
+              styles.dateCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.onBackground + "10",
+                shadowColor: colors.onBackground,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.08,
+                shadowRadius: 3,
+                elevation: 2,
+              },
+            ]}
+          >
             <View style={styles.calendarBody}>
-              <View style={styles.dateCircle}>
-                <Text style={styles.dateNumber}>{todayInfo.date}</Text>
-                <Text style={styles.dayText}>{todayInfo.dayName}</Text>
-              </View>
               <View style={styles.dateInfo}>
-                <Text style={styles.fullDate}>{todayInfo.fullDate}</Text>
-                <Text style={styles.todayLabel}>오늘</Text>
+                <Text
+                  style={[
+                    styles.dayText,
+                    { color: colors.onBackground + "60" },
+                  ]}
+                >
+                  {todayInfo.dayName}요일
+                </Text>
+                <Text
+                  style={[styles.dateNumber, { color: colors.onBackground }]}
+                >
+                  {todayInfo.year}년 {todayInfo.month}월 {todayInfo.date}일
+                </Text>
+              </View>
+              <View style={styles.dateIcon}>
+                <Ionicons name="calendar" size={24} color={colors.primary} />
               </View>
             </View>
           </View>
         </View>
 
         <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.total}</Text>
-            <Text style={styles.statLabel}>전체</Text>
+          <View
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: colors.onBackground,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.08,
+                shadowRadius: 3,
+                elevation: 2,
+              },
+            ]}
+          >
+            <Text style={[styles.statNumber, { color: colors.primary }]}>
+              {stats.total}
+            </Text>
+            <Text
+              style={[styles.statLabel, { color: colors.onBackground + "80" }]}
+            >
+              전체
+            </Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.completed}</Text>
-            <Text style={styles.statLabel}>완료</Text>
+          <View
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: colors.onBackground,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.08,
+                shadowRadius: 3,
+                elevation: 2,
+              },
+            ]}
+          >
+            <Text style={[styles.statNumber, { color: colors.primary }]}>
+              {stats.completed}
+            </Text>
+            <Text
+              style={[styles.statLabel, { color: colors.onBackground + "80" }]}
+            >
+              완료
+            </Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.remaining}</Text>
-            <Text style={styles.statLabel}>남은 일</Text>
+          <View
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: colors.onBackground,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.08,
+                shadowRadius: 3,
+                elevation: 2,
+              },
+            ]}
+          >
+            <Text style={[styles.statNumber, { color: colors.primary }]}>
+              {stats.remaining}
+            </Text>
+            <Text
+              style={[styles.statLabel, { color: colors.onBackground + "80" }]}
+            >
+              남은 일
+            </Text>
           </View>
         </View>
 
         <View style={styles.categoryStatsContainer}>
-          <View style={styles.categoryStatCard}>
+          <View
+            style={[
+              styles.categoryStatCard,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: colors.onBackground,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.08,
+                shadowRadius: 3,
+                elevation: 2,
+              },
+            ]}
+          >
             <View style={styles.categoryIcon}>
-              <Ionicons name="brush" size={20} color={COLORS.primary} />
+              <Ionicons name="brush" size={20} color={colors.primary} />
             </View>
-            <Text style={styles.categoryStatNumber}>{stats.cleaning}</Text>
-            <Text style={styles.categoryStatLabel}>청소</Text>
+            <Text
+              style={[
+                styles.categoryStatNumber,
+                { color: colors.onBackground },
+              ]}
+            >
+              {stats.cleaning}
+            </Text>
+            <Text
+              style={[
+                styles.categoryStatLabel,
+                { color: colors.onBackground + "80" },
+              ]}
+            >
+              청소
+            </Text>
           </View>
-          <View style={styles.categoryStatCard}>
+          <View
+            style={[
+              styles.categoryStatCard,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: colors.onBackground,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.08,
+                shadowRadius: 3,
+                elevation: 2,
+              },
+            ]}
+          >
             <View style={styles.categoryIcon}>
-              <Ionicons name="shirt" size={20} color={COLORS.secondary} />
+              <Ionicons name="shirt" size={20} color={colors.secondary} />
             </View>
-            <Text style={styles.categoryStatNumber}>{stats.laundry}</Text>
-            <Text style={styles.categoryStatLabel}>빨래</Text>
+            <Text
+              style={[
+                styles.categoryStatNumber,
+                { color: colors.onBackground },
+              ]}
+            >
+              {stats.laundry}
+            </Text>
+            <Text
+              style={[
+                styles.categoryStatLabel,
+                { color: colors.onBackground + "80" },
+              ]}
+            >
+              빨래
+            </Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>오늘의 가사</Text>
+          <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>
+            오늘의 가사
+          </Text>
           {todayTasks.length > 0 ? (
             todayTasks.map((task) => (
               <CleaningTaskItem
@@ -292,13 +428,20 @@ const HomeScreen: React.FC = () => {
                 <Ionicons
                   name="checkmark-circle-outline"
                   size={48}
-                  color={COLORS.onBackground + "40"}
+                  color={colors.onBackground + "40"}
                 />
               </View>
-              <Text style={styles.emptyStateTitle}>
+              <Text
+                style={[styles.emptyStateTitle, { color: colors.onBackground }]}
+              >
                 예정된 작업이 없습니다🧹
               </Text>
-              <Text style={styles.emptyStateDescription}>
+              <Text
+                style={[
+                  styles.emptyStateDescription,
+                  { color: colors.onBackground + "60" },
+                ]}
+              >
                 새로운 청소나 빨래 작업을 추가해보세요.
               </Text>
             </View>
@@ -306,10 +449,12 @@ const HomeScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: colors.primary }]}
           onPress={() => setIsAddModalVisible(true)}
         >
-          <Text style={styles.addButtonText}>+ 새 작업 추가</Text>
+          <Text style={[styles.addButtonText, { color: colors.onPrimary }]}>
+            + 새 작업 추가
+          </Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -325,7 +470,6 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -338,16 +482,9 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   dateCard: {
-    backgroundColor: COLORS.surface,
     padding: 20,
     borderRadius: 16,
-    shadowColor: COLORS.onBackground,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "10",
   },
   calendarHeader: {
     flexDirection: "row",
@@ -357,16 +494,13 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.onBackground + "20",
   },
   monthText: {
     ...TYPOGRAPHY.h2,
-    color: COLORS.primary,
     fontWeight: "700",
   },
   yearText: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground + "70",
     fontWeight: "500",
   },
   calendarBody: {
@@ -379,48 +513,35 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: COLORS.primary,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
   },
   dateNumber: {
-    ...TYPOGRAPHY.h1,
-    color: COLORS.onPrimary,
-    fontWeight: "700",
-    fontSize: 28,
+    ...TYPOGRAPHY.h3,
+    fontWeight: "600",
+    fontSize: 18,
   },
   dayText: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.onPrimary + "90",
-    fontSize: 12,
+    ...TYPOGRAPHY.body2,
+    fontSize: 14,
     fontWeight: "500",
-    marginTop: -2,
+    marginBottom: 4,
   },
   dateInfo: {
     flex: 1,
-    alignItems: "flex-end",
+    alignItems: "flex-start",
+  },
+  dateIcon: {
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   fullDate: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
     marginBottom: 5,
     fontWeight: "600",
   },
-  todayLabel: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.primary,
-    fontWeight: "600",
-    backgroundColor: COLORS.primary + "20",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    overflow: "hidden",
-  },
+
   statsContainer: {
     flexDirection: "row",
     paddingHorizontal: 20,
@@ -428,25 +549,17 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.surface,
     padding: 15,
     marginHorizontal: 5,
     borderRadius: 12,
     alignItems: "center",
-    shadowColor: COLORS.onBackground,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   statNumber: {
     ...TYPOGRAPHY.h2,
-    color: COLORS.primary,
     marginBottom: 5,
   },
   statLabel: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onBackground + "80",
   },
   categoryStatsContainer: {
     flexDirection: "row",
@@ -455,29 +568,21 @@ const styles = StyleSheet.create({
   },
   categoryStatCard: {
     flex: 1,
-    backgroundColor: COLORS.surface,
     padding: 15,
     marginHorizontal: 5,
     borderRadius: 12,
     alignItems: "center",
-    shadowColor: COLORS.onBackground,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   categoryIcon: {
     marginBottom: 8,
   },
   categoryStatNumber: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
     marginBottom: 3,
     fontWeight: "600",
   },
   categoryStatLabel: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onBackground + "80",
   },
   section: {
     paddingHorizontal: 20,
@@ -485,11 +590,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
     marginBottom: 15,
   },
   addButton: {
-    backgroundColor: COLORS.primary,
     marginHorizontal: 20,
     marginBottom: 20,
     padding: 15,
@@ -498,7 +601,6 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     ...TYPOGRAPHY.button,
-    color: COLORS.onPrimary,
   },
   emptyStateContainer: {
     alignItems: "center",
@@ -510,13 +612,11 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
     textAlign: "center",
     marginBottom: 8,
   },
   emptyStateDescription: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "60",
     textAlign: "center",
     lineHeight: 20,
     marginBottom: 24,
@@ -524,16 +624,13 @@ const styles = StyleSheet.create({
   emptyStateButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.primary + "20",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: COLORS.primary + "30",
   },
   emptyStateButtonText: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.primary,
     fontWeight: "600",
     marginLeft: 8,
   },

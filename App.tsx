@@ -16,13 +16,15 @@ import EditTaskScreen from "./src/screens/EditTaskScreen";
 
 // 타입
 import { RootStackParamList } from "./src/types";
-import { COLORS } from "./src/constants";
+import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<RootStackParamList>();
 
 // 탭 네비게이터
 function TabNavigator() {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -43,11 +45,11 @@ function TabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.onBackground + "60",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.onBackground + "60",
         tabBarStyle: {
-          backgroundColor: COLORS.surface,
-          borderTopColor: COLORS.onBackground + "20",
+          backgroundColor: colors.surface,
+          borderTopColor: colors.onBackground + "20",
           paddingTop: 5,
           height: 60,
           // iOS Safe Area 대응
@@ -80,11 +82,13 @@ function TabNavigator() {
   );
 }
 
-// 메인 앱
-export default function App() {
+// 메인 앱 컴포넌트
+function AppContent() {
+  const { colors, isDarkMode } = useTheme();
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      <StatusBar style="auto" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{
@@ -99,9 +103,9 @@ export default function App() {
               headerShown: true,
               title: "청소 작업 추가",
               headerStyle: {
-                backgroundColor: COLORS.primary,
+                backgroundColor: colors.primary,
               },
-              headerTintColor: COLORS.onPrimary,
+              headerTintColor: colors.onPrimary,
             }}
           />
           <Stack.Screen
@@ -111,13 +115,22 @@ export default function App() {
               headerShown: true,
               title: "청소 작업 수정",
               headerStyle: {
-                backgroundColor: COLORS.primary,
+                backgroundColor: colors.primary,
               },
-              headerTintColor: COLORS.onPrimary,
+              headerTintColor: colors.onPrimary,
             }}
           />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaView>
+  );
+}
+
+// 메인 앱
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

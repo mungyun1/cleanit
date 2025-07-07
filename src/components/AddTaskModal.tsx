@@ -14,7 +14,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { HouseholdTask, ChecklistItem, FrequencySettings } from "../types";
-import { COLORS, TYPOGRAPHY } from "../constants";
+import { TYPOGRAPHY } from "../constants";
+import { useTheme } from "../contexts/ThemeContext";
 import {
   SPACES,
   LAUNDRY_TYPES,
@@ -44,6 +45,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   onClose,
   onAddTask,
 }) => {
+  const { colors } = useTheme();
   const [title, setTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<
     "cleaning" | "laundry"
@@ -217,31 +219,56 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         style={styles.modalOverlay}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.background },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              { borderBottomColor: colors.onBackground + "20" },
+            ]}
+          >
             <View style={styles.headerTop}>
-              <View style={styles.dragHandle} />
+              <View
+                style={[
+                  styles.dragHandle,
+                  { backgroundColor: colors.onBackground + "30" },
+                ]}
+              />
             </View>
             <View style={styles.headerContent}>
               <TouchableOpacity
                 onPress={handleClose}
                 style={styles.closeButton}
               >
-                <Ionicons name="close" size={24} color={COLORS.onBackground} />
+                <Ionicons name="close" size={24} color={colors.onBackground} />
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>새 작업 추가</Text>
+              <Text style={[styles.modalTitle, { color: colors.onBackground }]}>
+                새 작업 추가
+              </Text>
               <TouchableOpacity
                 onPress={handleSaveTask}
                 style={[
                   styles.saveButton,
-                  !isFormValid() && styles.saveButtonDisabled,
+                  { backgroundColor: colors.primary },
+                  !isFormValid() && [
+                    styles.saveButtonDisabled,
+                    { backgroundColor: colors.onBackground + "30" },
+                  ],
                 ]}
                 disabled={!isFormValid()}
               >
                 <Text
                   style={[
                     styles.saveButtonText,
-                    !isFormValid() && styles.saveButtonTextDisabled,
+                    { color: colors.onPrimary },
+                    !isFormValid() && [
+                      styles.saveButtonTextDisabled,
+                      { color: colors.onBackground + "60" },
+                    ],
                   ]}
                 >
                   저장
@@ -257,13 +284,26 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           >
             {/* 카테고리 선택 */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>카테고리</Text>
+              <Text
+                style={[styles.sectionTitle, { color: colors.onBackground }]}
+              >
+                카테고리
+              </Text>
               <View style={styles.categoryContainer}>
                 <TouchableOpacity
                   style={[
                     styles.categoryButton,
-                    selectedCategory === "cleaning" &&
+                    {
+                      borderColor: colors.onBackground + "20",
+                      backgroundColor: colors.surface,
+                    },
+                    selectedCategory === "cleaning" && [
                       styles.categoryButtonSelected,
+                      {
+                        borderColor: colors.primary,
+                        backgroundColor: colors.primary,
+                      },
+                    ],
                   ]}
                   onPress={() => setSelectedCategory("cleaning")}
                 >
@@ -272,15 +312,18 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     size={20}
                     color={
                       selectedCategory === "cleaning"
-                        ? COLORS.onPrimary
-                        : COLORS.primary
+                        ? colors.onPrimary
+                        : colors.primary
                     }
                   />
                   <Text
                     style={[
                       styles.categoryButtonText,
-                      selectedCategory === "cleaning" &&
+                      { color: colors.onBackground },
+                      selectedCategory === "cleaning" && [
                         styles.categoryButtonTextSelected,
+                        { color: colors.onPrimary },
+                      ],
                     ]}
                   >
                     청소
@@ -289,8 +332,17 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 <TouchableOpacity
                   style={[
                     styles.categoryButton,
-                    selectedCategory === "laundry" &&
+                    {
+                      borderColor: colors.onBackground + "20",
+                      backgroundColor: colors.surface,
+                    },
+                    selectedCategory === "laundry" && [
                       styles.categoryButtonSelected,
+                      {
+                        borderColor: colors.secondary,
+                        backgroundColor: colors.secondary,
+                      },
+                    ],
                   ]}
                   onPress={() => setSelectedCategory("laundry")}
                 >
@@ -299,15 +351,18 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     size={20}
                     color={
                       selectedCategory === "laundry"
-                        ? COLORS.onPrimary
-                        : COLORS.secondary
+                        ? colors.onPrimary
+                        : colors.secondary
                     }
                   />
                   <Text
                     style={[
                       styles.categoryButtonText,
-                      selectedCategory === "laundry" &&
+                      { color: colors.onBackground },
+                      selectedCategory === "laundry" && [
                         styles.categoryButtonTextSelected,
+                        { color: colors.onPrimary },
+                      ],
                     ]}
                   >
                     빨래
@@ -318,10 +373,21 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
             {/* 제목 입력 */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>작업 제목</Text>
+              <Text
+                style={[styles.sectionTitle, { color: colors.onBackground }]}
+              >
+                작업 제목
+              </Text>
               <TextInput
-                style={styles.titleInput}
+                style={[
+                  styles.titleInput,
+                  {
+                    borderColor: colors.onBackground + "30",
+                    color: colors.onBackground,
+                  },
+                ]}
                 placeholder="작업 제목을 입력하세요"
+                placeholderTextColor={colors.onBackground + "60"}
                 value={title}
                 onChangeText={setTitle}
                 maxLength={50}
@@ -330,7 +396,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
             {/* 공간/빨래 타입 선택 */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.onBackground }]}
+              >
                 {selectedCategory === "cleaning" ? "공간" : "빨래 타입"}
               </Text>
 
@@ -341,15 +409,28 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       key={space}
                       style={[
                         styles.optionButton,
-                        selectedSpace === space && styles.optionButtonSelected,
+                        {
+                          borderColor: colors.onBackground + "30",
+                          backgroundColor: colors.surface,
+                        },
+                        selectedSpace === space && [
+                          styles.optionButtonSelected,
+                          {
+                            borderColor: colors.primary,
+                            backgroundColor: colors.primary,
+                          },
+                        ],
                       ]}
                       onPress={() => setSelectedSpace(space)}
                     >
                       <Text
                         style={[
                           styles.optionButtonText,
-                          selectedSpace === space &&
+                          { color: colors.onBackground },
+                          selectedSpace === space && [
                             styles.optionButtonTextSelected,
+                            { color: colors.onPrimary },
+                          ],
                         ]}
                       >
                         {space}
@@ -360,8 +441,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   {isAddingCustomSpace ? (
                     <View style={styles.customInputContainer}>
                       <TextInput
-                        style={styles.customInput}
+                        style={[
+                          styles.customInput,
+                          {
+                            borderColor: colors.onBackground + "30",
+                            color: colors.onBackground,
+                          },
+                        ]}
                         placeholder="공간 이름 입력"
+                        placeholderTextColor={colors.onBackground + "60"}
                         value={customSpace}
                         onChangeText={setCustomSpace}
                         onSubmitEditing={handleAddCustomSpace}
@@ -369,22 +457,38 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       />
                       <TouchableOpacity
                         onPress={handleAddCustomSpace}
-                        style={styles.customInputButton}
+                        style={[
+                          styles.customInputButton,
+                          { backgroundColor: colors.primary + "20" },
+                        ]}
                       >
                         <Ionicons
                           name="checkmark"
                           size={20}
-                          color={COLORS.primary}
+                          color={colors.primary}
                         />
                       </TouchableOpacity>
                     </View>
                   ) : (
                     <TouchableOpacity
-                      style={styles.addCustomButton}
+                      style={[
+                        styles.addCustomButton,
+                        {
+                          borderColor: colors.primary,
+                          backgroundColor: colors.primary + "10",
+                        },
+                      ]}
                       onPress={() => setIsAddingCustomSpace(true)}
                     >
-                      <Ionicons name="add" size={20} color={COLORS.primary} />
-                      <Text style={styles.addCustomButtonText}>직접 입력</Text>
+                      <Ionicons name="add" size={20} color={colors.primary} />
+                      <Text
+                        style={[
+                          styles.addCustomButtonText,
+                          { color: colors.primary },
+                        ]}
+                      >
+                        직접 입력
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -395,8 +499,17 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       key={type.value}
                       style={[
                         styles.optionButton,
-                        selectedLaundryType === type.value &&
+                        {
+                          borderColor: colors.onBackground + "30",
+                          backgroundColor: colors.surface,
+                        },
+                        selectedLaundryType === type.value && [
                           styles.optionButtonSelected,
+                          {
+                            borderColor: colors.primary,
+                            backgroundColor: colors.primary,
+                          },
+                        ],
                       ]}
                       onPress={() =>
                         setSelectedLaundryType(
@@ -412,8 +525,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       <Text
                         style={[
                           styles.optionButtonText,
-                          selectedLaundryType === type.value &&
+                          { color: colors.onBackground },
+                          selectedLaundryType === type.value && [
                             styles.optionButtonTextSelected,
+                            { color: colors.onPrimary },
+                          ],
                         ]}
                       >
                         {type.label}
@@ -426,15 +542,28 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
             {/* 주기 선택 */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>주기</Text>
+              <Text
+                style={[styles.sectionTitle, { color: colors.onBackground }]}
+              >
+                주기
+              </Text>
               <View style={styles.optionsContainer}>
                 {FREQUENCIES.map((frequency) => (
                   <TouchableOpacity
                     key={frequency.value}
                     style={[
                       styles.optionButton,
-                      selectedFrequency.type === frequency.value &&
+                      {
+                        borderColor: colors.onBackground + "30",
+                        backgroundColor: colors.surface,
+                      },
+                      selectedFrequency.type === frequency.value && [
                         styles.optionButtonSelected,
+                        {
+                          borderColor: colors.primary,
+                          backgroundColor: colors.primary,
+                        },
+                      ],
                     ]}
                     onPress={() =>
                       setSelectedFrequency({
@@ -446,8 +575,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     <Text
                       style={[
                         styles.optionButtonText,
-                        selectedFrequency.type === frequency.value &&
+                        { color: colors.onBackground },
+                        selectedFrequency.type === frequency.value && [
                           styles.optionButtonTextSelected,
+                          { color: colors.onPrimary },
+                        ],
                       ]}
                     >
                       {frequency.label}
@@ -460,15 +592,28 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               {(selectedFrequency.type === "weekly" ||
                 selectedFrequency.type === "biweekly") && (
                 <View style={styles.daysContainer}>
-                  <Text style={styles.daysTitle}>요일 선택</Text>
+                  <Text
+                    style={[styles.daysTitle, { color: colors.onBackground }]}
+                  >
+                    요일 선택
+                  </Text>
                   <View style={styles.daysGrid}>
                     {DAYS_OF_WEEK.map((day) => (
                       <TouchableOpacity
                         key={day.value}
                         style={[
                           styles.dayButton,
-                          selectedFrequency.daysOfWeek?.includes(day.value) &&
+                          {
+                            borderColor: colors.onBackground + "30",
+                            backgroundColor: colors.surface,
+                          },
+                          selectedFrequency.daysOfWeek?.includes(day.value) && [
                             styles.dayButtonSelected,
+                            {
+                              borderColor: colors.primary,
+                              backgroundColor: colors.primary,
+                            },
+                          ],
                         ]}
                         onPress={() => {
                           const currentDays =
@@ -486,8 +631,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                         <Text
                           style={[
                             styles.dayButtonText,
-                            selectedFrequency.daysOfWeek?.includes(day.value) &&
+                            { color: colors.onBackground },
+                            selectedFrequency.daysOfWeek?.includes(
+                              day.value
+                            ) && [
                               styles.dayButtonTextSelected,
+                              { color: colors.onPrimary },
+                            ],
                           ]}
                         >
                           {day.label}
@@ -501,10 +651,24 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               {/* 사용자 정의 일수 입력 */}
               {selectedFrequency.type === "custom" && (
                 <View style={styles.customDaysContainer}>
-                  <Text style={styles.customDaysTitle}>일수 입력</Text>
+                  <Text
+                    style={[
+                      styles.customDaysTitle,
+                      { color: colors.onBackground },
+                    ]}
+                  >
+                    일수 입력
+                  </Text>
                   <TextInput
-                    style={styles.customDaysInput}
+                    style={[
+                      styles.customDaysInput,
+                      {
+                        borderColor: colors.onBackground + "30",
+                        color: colors.onBackground,
+                      },
+                    ]}
                     placeholder="예: 3 (3일마다)"
+                    placeholderTextColor={colors.onBackground + "60"}
                     keyboardType="numeric"
                     value={selectedFrequency.customDays?.toString() || ""}
                     onChangeText={(text) =>
@@ -521,7 +685,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             {/* 체크리스트 */}
             <View style={styles.section}>
               <View style={styles.checklistHeader}>
-                <Text style={styles.sectionTitle}>체크리스트</Text>
+                <Text
+                  style={[styles.sectionTitle, { color: colors.onBackground }]}
+                >
+                  체크리스트
+                </Text>
                 <TouchableOpacity
                   onPress={() =>
                     setIsAddingChecklistItem(!isAddingChecklistItem)
@@ -531,7 +699,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   <Ionicons
                     name={isAddingChecklistItem ? "remove" : "add"}
                     size={20}
-                    color={COLORS.primary}
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               </View>
@@ -539,8 +707,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               {isAddingChecklistItem && (
                 <View style={styles.addChecklistContainer}>
                   <TextInput
-                    style={styles.checklistInput}
+                    style={[
+                      styles.checklistInput,
+                      {
+                        borderColor: colors.onBackground + "30",
+                        color: colors.onBackground,
+                      },
+                    ]}
                     placeholder="체크리스트 항목 추가"
+                    placeholderTextColor={colors.onBackground + "60"}
                     value={newChecklistItem}
                     onChangeText={setNewChecklistItem}
                     onSubmitEditing={handleAddChecklistItem}
@@ -548,12 +723,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   />
                   <TouchableOpacity
                     onPress={handleAddChecklistItem}
-                    style={styles.addChecklistConfirmButton}
+                    style={[
+                      styles.addChecklistConfirmButton,
+                      { backgroundColor: colors.primary + "20" },
+                    ]}
                   >
                     <Ionicons
                       name="checkmark"
                       size={20}
-                      color={COLORS.primary}
+                      color={colors.primary}
                     />
                   </TouchableOpacity>
                 </View>
@@ -561,7 +739,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
               {checklistItems.length > 0 ? (
                 checklistItems.map((item) => (
-                  <View key={item.id} style={styles.checklistItem}>
+                  <View
+                    key={item.id}
+                    style={[
+                      styles.checklistItem,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
                     <TouchableOpacity
                       onPress={() => handleToggleChecklistItem(item.id)}
                       style={styles.checklistCheckbox}
@@ -575,15 +759,19 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                         size={20}
                         color={
                           item.isCompleted
-                            ? COLORS.primary
-                            : COLORS.onBackground + "60"
+                            ? colors.primary
+                            : colors.onBackground + "60"
                         }
                       />
                     </TouchableOpacity>
                     <Text
                       style={[
                         styles.checklistItemText,
-                        item.isCompleted && styles.completedItemText,
+                        { color: colors.onBackground },
+                        item.isCompleted && [
+                          styles.completedItemText,
+                          { color: colors.onBackground + "60" },
+                        ],
                       ]}
                     >
                       {item.title}
@@ -592,12 +780,17 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       onPress={() => handleDeleteChecklistItem(item.id)}
                       style={styles.deleteChecklistButton}
                     >
-                      <Ionicons name="close" size={16} color={COLORS.error} />
+                      <Ionicons name="close" size={16} color={colors.error} />
                     </TouchableOpacity>
                   </View>
                 ))
               ) : (
-                <Text style={styles.emptyChecklist}>
+                <Text
+                  style={[
+                    styles.emptyChecklist,
+                    { color: colors.onBackground + "60" },
+                  ]}
+                >
                   체크리스트 항목이 없습니다.
                 </Text>
               )}
@@ -616,7 +809,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: COLORS.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: height * 0.9,
@@ -625,7 +817,6 @@ const styles = StyleSheet.create({
   },
   modalHeader: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.onBackground + "20",
   },
   headerTop: {
     alignItems: "center",
@@ -635,7 +826,6 @@ const styles = StyleSheet.create({
   dragHandle: {
     width: 40,
     height: 4,
-    backgroundColor: COLORS.onBackground + "30",
     borderRadius: 2,
   },
   headerContent: {
@@ -649,24 +839,21 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
     fontWeight: "600",
   },
   saveButton: {
-    backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
   saveButtonDisabled: {
-    backgroundColor: COLORS.onBackground + "30",
+    // backgroundColor는 인라인으로 적용
   },
   saveButtonText: {
     ...TYPOGRAPHY.button,
-    color: COLORS.onPrimary,
   },
   saveButtonTextDisabled: {
-    color: COLORS.onBackground + "60",
+    // color는 인라인으로 적용
   },
   modalContent: {
     flex: 1,
@@ -681,7 +868,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TYPOGRAPHY.h4,
-    color: COLORS.onBackground,
     marginBottom: 12,
     fontWeight: "600",
   },
@@ -697,29 +883,23 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: COLORS.onBackground + "20",
-    backgroundColor: COLORS.surface,
   },
   categoryButtonSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary,
+    // borderColor와 backgroundColor는 인라인으로 적용
   },
   categoryButtonText: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
     marginLeft: 8,
     fontWeight: "500",
   },
   categoryButtonTextSelected: {
-    color: COLORS.onPrimary,
+    // color는 인라인으로 적용
   },
   titleInput: {
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "30",
     borderRadius: 8,
     padding: 12,
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
   },
   optionsContainer: {
     flexDirection: "row",
@@ -731,19 +911,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "30",
-    backgroundColor: COLORS.surface,
   },
   optionButtonSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary,
+    // borderColor와 backgroundColor는 인라인으로 적용
   },
   optionButtonText: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
   },
   optionButtonTextSelected: {
-    color: COLORS.onPrimary,
     fontWeight: "600",
   },
   customInputContainer: {
@@ -754,15 +929,12 @@ const styles = StyleSheet.create({
   customInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "30",
     borderRadius: 8,
     padding: 8,
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
   },
   customInputButton: {
     padding: 8,
-    backgroundColor: COLORS.primary + "20",
     borderRadius: 8,
   },
   addCustomButton: {
@@ -772,12 +944,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary + "10",
   },
   addCustomButtonText: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.primary,
     marginLeft: 4,
     fontWeight: "500",
   },
@@ -786,7 +955,6 @@ const styles = StyleSheet.create({
   },
   daysTitle: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
     marginBottom: 8,
     fontWeight: "500",
   },
@@ -800,19 +968,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "30",
-    backgroundColor: COLORS.surface,
   },
   dayButtonSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary,
+    // borderColor와 backgroundColor는 인라인으로 적용
   },
   dayButtonText: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onBackground,
   },
   dayButtonTextSelected: {
-    color: COLORS.onPrimary,
     fontWeight: "600",
   },
   customDaysContainer: {
@@ -820,17 +983,14 @@ const styles = StyleSheet.create({
   },
   customDaysTitle: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
     marginBottom: 8,
     fontWeight: "500",
   },
   customDaysInput: {
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "30",
     borderRadius: 8,
     padding: 12,
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
   },
   checklistHeader: {
     flexDirection: "row",
@@ -849,16 +1009,13 @@ const styles = StyleSheet.create({
   checklistInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "30",
     borderRadius: 8,
     padding: 12,
     marginRight: 8,
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
   },
   addChecklistConfirmButton: {
     padding: 12,
-    backgroundColor: COLORS.primary + "20",
     borderRadius: 8,
   },
   checklistItem: {
@@ -866,7 +1023,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: COLORS.surface,
     borderRadius: 8,
     marginBottom: 8,
   },
@@ -876,18 +1032,15 @@ const styles = StyleSheet.create({
   checklistItemText: {
     flex: 1,
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
   },
   completedItemText: {
     textDecorationLine: "line-through",
-    color: COLORS.onBackground + "60",
   },
   deleteChecklistButton: {
     padding: 4,
   },
   emptyChecklist: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "60",
     textAlign: "center",
     fontStyle: "italic",
     paddingVertical: 20,

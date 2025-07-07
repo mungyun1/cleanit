@@ -20,7 +20,7 @@ export const FREQUENCY_OPTIONS = [
 ];
 
 // 색상 테마
-export const COLORS = {
+export const LIGHT_COLORS = {
   primary: "#6200EE",
   primaryVariant: "#3700B3",
   secondary: "#03DAC6",
@@ -39,6 +39,29 @@ export const COLORS = {
   bedroom: "#96CEB4",
   common: "#FFEAA7",
 };
+
+export const DARK_COLORS = {
+  primary: "#BB86FC",
+  primaryVariant: "#3700B3",
+  secondary: "#03DAC6",
+  background: "#121212",
+  surface: "#000000",
+  error: "#CF6679",
+  onPrimary: "#000000",
+  onSecondary: "#000000",
+  onBackground: "#FFFFFF",
+  onSurface: "#FFFFFF",
+  onError: "#000000",
+  livingRoom: "#FF6B6B",
+  kitchen: "#4ECDC4",
+  bathroom: "#45B7D1",
+  toilet: "#FF8A80",
+  bedroom: "#96CEB4",
+  common: "#FFEAA7",
+};
+
+// 기본 색상 (라이트 모드)
+export const COLORS = LIGHT_COLORS;
 
 // 타이포그래피
 export const TYPOGRAPHY = {

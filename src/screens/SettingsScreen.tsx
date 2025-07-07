@@ -8,12 +8,13 @@ import {
   Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, TYPOGRAPHY } from "../constants";
+import { TYPOGRAPHY } from "../constants";
+import { useTheme } from "../contexts/ThemeContext";
 import Header from "../components/Header";
 
 const SettingsScreen: React.FC = () => {
+  const { colors, isDarkMode, setDarkMode } = useTheme();
   const [notifications, setNotifications] = React.useState(true);
-  const [darkMode, setDarkMode] = React.useState(false);
 
   const settingsItems = [
     {
@@ -30,7 +31,7 @@ const SettingsScreen: React.FC = () => {
       title: "다크 모드",
       subtitle: "어두운 테마를 사용하시겠습니까?",
       type: "switch",
-      value: darkMode,
+      value: isDarkMode,
       onValueChange: setDarkMode,
       icon: "moon",
     },
@@ -58,7 +59,7 @@ const SettingsScreen: React.FC = () => {
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -71,20 +72,52 @@ const SettingsScreen: React.FC = () => {
           onMenuPress={() => console.log("메뉴 버튼 클릭")}
         />
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>일반</Text>
+          <Text
+            style={[styles.sectionTitle, { color: colors.onBackground + "80" }]}
+          >
+            일반
+          </Text>
           {settingsItems.slice(0, 2).map((item) => (
-            <View key={item.id} style={styles.settingItem}>
+            <View
+              key={item.id}
+              style={[
+                styles.settingItem,
+                {
+                  backgroundColor: colors.surface,
+                  borderBottomColor: colors.onBackground + "10",
+                },
+              ]}
+            >
               <View style={styles.settingLeft}>
-                <View style={styles.iconContainer}>
+                <View
+                  style={[
+                    styles.iconContainer,
+                    { backgroundColor: colors.primary + "20" },
+                  ]}
+                >
                   <Ionicons
                     name={item.icon as any}
                     size={20}
-                    color={COLORS.primary}
+                    color={colors.primary}
                   />
                 </View>
                 <View style={styles.settingText}>
-                  <Text style={styles.settingTitle}>{item.title}</Text>
-                  <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+                  <Text
+                    style={[
+                      styles.settingTitle,
+                      { color: colors.onBackground },
+                    ]}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.settingSubtitle,
+                      { color: colors.onBackground + "60" },
+                    ]}
+                  >
+                    {item.subtitle}
+                  </Text>
                 </View>
               </View>
               {item.type === "switch" && (
@@ -92,11 +125,11 @@ const SettingsScreen: React.FC = () => {
                   value={item.value}
                   onValueChange={item.onValueChange}
                   trackColor={{
-                    false: COLORS.onBackground + "30",
-                    true: COLORS.primary + "50",
+                    false: colors.onBackground + "30",
+                    true: colors.primary + "50",
                   }}
                   thumbColor={
-                    item.value ? COLORS.primary : COLORS.onBackground + "60"
+                    item.value ? colors.primary : colors.onBackground + "60"
                   }
                 />
               )}
@@ -104,7 +137,7 @@ const SettingsScreen: React.FC = () => {
                 <Ionicons
                   name="chevron-forward"
                   size={20}
-                  color={COLORS.onBackground + "60"}
+                  color={colors.onBackground + "60"}
                 />
               )}
             </View>
@@ -112,58 +145,129 @@ const SettingsScreen: React.FC = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>데이터</Text>
+          <Text
+            style={[styles.sectionTitle, { color: colors.onBackground + "80" }]}
+          >
+            데이터
+          </Text>
           {settingsItems.slice(2, 4).map((item) => (
-            <TouchableOpacity key={item.id} style={styles.settingItem}>
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.settingItem,
+                {
+                  backgroundColor: colors.surface,
+                  borderBottomColor: colors.onBackground + "10",
+                },
+              ]}
+            >
               <View style={styles.settingLeft}>
-                <View style={styles.iconContainer}>
+                <View
+                  style={[
+                    styles.iconContainer,
+                    { backgroundColor: colors.primary + "20" },
+                  ]}
+                >
                   <Ionicons
                     name={item.icon as any}
                     size={20}
-                    color={COLORS.primary}
+                    color={colors.primary}
                   />
                 </View>
                 <View style={styles.settingText}>
-                  <Text style={styles.settingTitle}>{item.title}</Text>
-                  <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+                  <Text
+                    style={[
+                      styles.settingTitle,
+                      { color: colors.onBackground },
+                    ]}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.settingSubtitle,
+                      { color: colors.onBackground + "60" },
+                    ]}
+                  >
+                    {item.subtitle}
+                  </Text>
                 </View>
               </View>
               <Ionicons
                 name="chevron-forward"
                 size={20}
-                color={COLORS.onBackground + "60"}
+                color={colors.onBackground + "60"}
               />
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>정보</Text>
-          <TouchableOpacity style={styles.settingItem}>
+          <Text
+            style={[styles.sectionTitle, { color: colors.onBackground + "80" }]}
+          >
+            정보
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: colors.surface,
+                borderBottomColor: colors.onBackground + "10",
+              },
+            ]}
+          >
             <View style={styles.settingLeft}>
-              <View style={styles.iconContainer}>
+              <View
+                style={[
+                  styles.iconContainer,
+                  { backgroundColor: colors.primary + "20" },
+                ]}
+              >
                 <Ionicons
                   name="information-circle"
                   size={20}
-                  color={COLORS.primary}
+                  color={colors.primary}
                 />
               </View>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>앱 정보</Text>
-                <Text style={styles.settingSubtitle}>버전 1.0.0</Text>
+                <Text
+                  style={[styles.settingTitle, { color: colors.onBackground }]}
+                >
+                  앱 정보
+                </Text>
+                <Text
+                  style={[
+                    styles.settingSubtitle,
+                    { color: colors.onBackground + "60" },
+                  ]}
+                >
+                  버전 1.0.0
+                </Text>
               </View>
             </View>
             <Ionicons
               name="chevron-forward"
               size={20}
-              color={COLORS.onBackground + "60"}
+              color={colors.onBackground + "60"}
             />
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>CleanIt v1.0.0</Text>
-          <Text style={styles.footerSubtext}>개인 청소 관리 도우미</Text>
+          <Text
+            style={[styles.footerText, { color: colors.onBackground + "60" }]}
+          >
+            CleanIt v1.0.0
+          </Text>
+          <Text
+            style={[
+              styles.footerSubtext,
+              { color: colors.onBackground + "40" },
+            ]}
+          >
+            개인 청소 관리 도우미
+          </Text>
         </View>
       </ScrollView>
     </View>
@@ -173,7 +277,6 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -187,19 +290,16 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.h1,
-    color: COLORS.onBackground,
     marginBottom: 5,
   },
   subtitle: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "80",
   },
   section: {
     marginBottom: 20,
   },
   sectionTitle: {
     ...TYPOGRAPHY.h4,
-    color: COLORS.onBackground + "80",
     marginHorizontal: 20,
     marginBottom: 10,
     marginTop: 10,
@@ -208,12 +308,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: COLORS.surface,
     marginHorizontal: 20,
     marginBottom: 1,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.onBackground + "10",
   },
   settingLeft: {
     flexDirection: "row",
@@ -224,7 +322,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.primary + "20",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -234,12 +331,10 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     ...TYPOGRAPHY.body1,
-    color: COLORS.onBackground,
     marginBottom: 2,
   },
   settingSubtitle: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "60",
   },
   footer: {
     alignItems: "center",
@@ -248,12 +343,10 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "60",
     marginBottom: 5,
   },
   footerSubtext: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onBackground + "40",
   },
 });
 

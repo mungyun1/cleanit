@@ -12,7 +12,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { HouseholdTask, ChecklistItem, FrequencySettings } from "../types";
-import { COLORS, TYPOGRAPHY } from "../constants";
+import { TYPOGRAPHY } from "../constants";
+import { useTheme } from "../contexts/ThemeContext";
 import { formatDate, getNextDueDate } from "../utils/dateUtils";
 import {
   getSpaceColor,
@@ -42,6 +43,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   onUpdateTask,
   onDeleteTask,
 }) => {
+  const { colors } = useTheme();
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -154,19 +156,31 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.background },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              { borderBottomColor: colors.onBackground + "20" },
+            ]}
+          >
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color={COLORS.onBackground} />
+              <Ionicons name="close" size={24} color={colors.onBackground} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>작업 상세</Text>
+            <Text style={[styles.modalTitle, { color: colors.onBackground }]}>
+              작업 상세
+            </Text>
             <View style={styles.headerActions}>
               {onDeleteTask && (
                 <TouchableOpacity
                   onPress={handleDeleteTask}
                   style={styles.deleteButton}
                 >
-                  <Ionicons name="trash" size={20} color={COLORS.error} />
+                  <Ionicons name="trash" size={20} color={colors.error} />
                 </TouchableOpacity>
               )}
             </View>
@@ -178,19 +192,28 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           >
             <View style={styles.taskHeader}>
               <View style={styles.titleSection}>
-                <Text style={styles.taskTitle}>{task.title}</Text>
+                <Text
+                  style={[styles.taskTitle, { color: colors.onBackground }]}
+                >
+                  {task.title}
+                </Text>
                 <View
                   style={[
                     styles.categoryTag,
                     {
                       backgroundColor:
                         task.category === "cleaning"
-                          ? getSpaceColor(task.space || "")
+                          ? getSpaceColor(task.space || "", colors)
                           : getLaundryTypeColor(task.laundryType || ""),
                     },
                   ]}
                 >
-                  <Text style={styles.categoryText}>
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      { color: colors.onBackground },
+                    ]}
+                  >
                     {task.category === "cleaning"
                       ? task.space
                       : getLaundryTypeText(task.laundryType || "")}
@@ -199,30 +222,66 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </View>
 
               {task.description && (
-                <Text style={styles.taskDescription}>{task.description}</Text>
+                <Text
+                  style={[
+                    styles.taskDescription,
+                    { color: colors.onBackground + "80" },
+                  ]}
+                >
+                  {task.description}
+                </Text>
               )}
             </View>
 
-            <View style={styles.infoSection}>
+            <View
+              style={[styles.infoSection, { backgroundColor: colors.surface }]}
+            >
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>주기</Text>
-                <Text style={styles.infoValue}>
+                <Text
+                  style={[
+                    styles.infoLabel,
+                    { color: colors.onBackground + "60" },
+                  ]}
+                >
+                  주기
+                </Text>
+                <Text
+                  style={[styles.infoValue, { color: colors.onBackground }]}
+                >
                   {getFrequencyText(task.frequency)}
                 </Text>
               </View>
 
               {task.lastCompleted && (
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>마지막 작업</Text>
-                  <Text style={styles.infoValue}>
+                  <Text
+                    style={[
+                      styles.infoLabel,
+                      { color: colors.onBackground + "60" },
+                    ]}
+                  >
+                    마지막 작업
+                  </Text>
+                  <Text
+                    style={[styles.infoValue, { color: colors.onBackground }]}
+                  >
                     {formatDate(task.lastCompleted)}
                   </Text>
                 </View>
               )}
 
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>다음 예정일</Text>
-                <Text style={styles.infoValue}>
+                <Text
+                  style={[
+                    styles.infoLabel,
+                    { color: colors.onBackground + "60" },
+                  ]}
+                >
+                  다음 예정일
+                </Text>
+                <Text
+                  style={[styles.infoValue, { color: colors.onBackground }]}
+                >
                   {getNextDueDate(
                     task.lastCompleted,
                     task.createdAt,
@@ -234,7 +293,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
             <View style={styles.checklistSection}>
               <View style={styles.checklistHeader}>
-                <Text style={styles.checklistTitle}>체크리스트</Text>
+                <Text
+                  style={[
+                    styles.checklistTitle,
+                    { color: colors.onBackground },
+                  ]}
+                >
+                  체크리스트
+                </Text>
                 <TouchableOpacity
                   onPress={() => setIsAddingItem(!isAddingItem)}
                   style={styles.addItemButton}
@@ -242,7 +308,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <Ionicons
                     name={isAddingItem ? "remove" : "add"}
                     size={20}
-                    color={COLORS.primary}
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               </View>
@@ -250,8 +316,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               {isAddingItem && (
                 <View style={styles.addItemContainer}>
                   <TextInput
-                    style={styles.addItemInput}
+                    style={[
+                      styles.addItemInput,
+                      {
+                        borderColor: colors.onBackground + "30",
+                        color: colors.onBackground,
+                      },
+                    ]}
                     placeholder="새 체크리스트 항목 추가"
+                    placeholderTextColor={colors.onBackground + "60"}
                     value={newChecklistItem}
                     onChangeText={setNewChecklistItem}
                     onSubmitEditing={handleAddChecklistItem}
@@ -259,12 +332,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   />
                   <TouchableOpacity
                     onPress={handleAddChecklistItem}
-                    style={styles.addItemSubmitButton}
+                    style={[
+                      styles.addItemSubmitButton,
+                      { backgroundColor: colors.primary + "20" },
+                    ]}
                   >
                     <Ionicons
                       name="checkmark"
                       size={20}
-                      color={COLORS.primary}
+                      color={colors.primary}
                     />
                   </TouchableOpacity>
                 </View>
@@ -272,7 +348,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
               {task.checklistItems.length > 0 ? (
                 task.checklistItems.map((item) => (
-                  <View key={item.id} style={styles.checklistItem}>
+                  <View
+                    key={item.id}
+                    style={[
+                      styles.checklistItem,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
                     <TouchableOpacity
                       onPress={() => handleToggleChecklistItem(item.id)}
                       style={styles.checklistCheckbox}
@@ -286,15 +368,19 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                         size={20}
                         color={
                           item.isCompleted
-                            ? COLORS.primary
-                            : COLORS.onBackground + "60"
+                            ? colors.primary
+                            : colors.onBackground + "60"
                         }
                       />
                     </TouchableOpacity>
                     <Text
                       style={[
                         styles.checklistItemText,
-                        item.isCompleted && styles.completedItemText,
+                        { color: colors.onBackground },
+                        item.isCompleted && [
+                          styles.completedItemText,
+                          { color: colors.onBackground + "60" },
+                        ],
                       ]}
                     >
                       {item.title}
@@ -303,26 +389,43 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       onPress={() => handleDeleteChecklistItem(item.id)}
                       style={styles.deleteItemButton}
                     >
-                      <Ionicons name="close" size={16} color={COLORS.error} />
+                      <Ionicons name="close" size={16} color={colors.error} />
                     </TouchableOpacity>
                   </View>
                 ))
               ) : (
-                <Text style={styles.emptyChecklist}>
+                <Text
+                  style={[
+                    styles.emptyChecklist,
+                    { color: colors.onBackground + "60" },
+                  ]}
+                >
                   체크리스트 항목이 없습니다.
                 </Text>
               )}
             </View>
           </ScrollView>
 
-          <View style={styles.modalFooter}>
+          <View
+            style={[
+              styles.modalFooter,
+              { borderTopColor: colors.onBackground + "20" },
+            ]}
+          >
             <View style={styles.footerButtons}>
               {onEdit && (
                 <TouchableOpacity
                   onPress={hasChanges ? onEdit : undefined}
                   style={[
                     styles.editButton,
-                    !hasChanges && styles.editButtonDisabled,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.primary,
+                    },
+                    !hasChanges && [
+                      styles.editButtonDisabled,
+                      { opacity: 0.4 },
+                    ],
                   ]}
                   disabled={!hasChanges}
                 >
@@ -330,13 +433,17 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     name="pencil"
                     size={20}
                     color={
-                      hasChanges ? COLORS.primary : COLORS.onBackground + "40"
+                      hasChanges ? colors.primary : colors.onBackground + "40"
                     }
                   />
                   <Text
                     style={[
                       styles.editButtonText,
-                      !hasChanges && styles.editButtonTextDisabled,
+                      { color: colors.primary },
+                      !hasChanges && [
+                        styles.editButtonTextDisabled,
+                        { color: colors.onBackground + "40" },
+                      ],
                     ]}
                   >
                     수정하기
@@ -352,7 +459,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 }}
                 style={[
                   styles.completeButton,
-                  task.isCompleted && styles.completedButton,
+                  {
+                    backgroundColor: colors.primary + "20",
+                    borderColor: colors.primary,
+                  },
+                  task.isCompleted && [
+                    styles.completedButton,
+                    { backgroundColor: colors.primary },
+                  ],
                 ]}
               >
                 <Ionicons
@@ -360,12 +474,16 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     task.isCompleted ? "checkmark-circle" : "ellipse-outline"
                   }
                   size={20}
-                  color={task.isCompleted ? COLORS.onPrimary : COLORS.primary}
+                  color={task.isCompleted ? colors.onPrimary : colors.primary}
                 />
                 <Text
                   style={[
                     styles.completeButtonText,
-                    task.isCompleted && styles.completedButtonText,
+                    { color: colors.primary },
+                    task.isCompleted && [
+                      styles.completedButtonText,
+                      { color: colors.onPrimary },
+                    ],
                   ]}
                 >
                   {task.isCompleted ? "완료됨" : "완료하기"}
@@ -386,7 +504,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: COLORS.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: height * 0.9, // 0.98 → 0.9로 변경
@@ -398,14 +515,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.onBackground + "20",
   },
   closeButton: {
     padding: 4,
   },
   modalTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
     fontWeight: "600",
   },
   headerActions: {
@@ -417,22 +532,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: COLORS.surface,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.primary,
   },
   editButtonText: {
     ...TYPOGRAPHY.button,
-    color: COLORS.primary,
     marginLeft: 8,
   },
   editButtonDisabled: {
-    opacity: 0.4,
+    // opacity는 인라인으로 적용
   },
   editButtonTextDisabled: {
-    color: COLORS.onBackground + "40",
+    // color는 인라인으로 적용
   },
   deleteButton: {
     padding: 8,
@@ -452,7 +564,6 @@ const styles = StyleSheet.create({
   },
   taskTitle: {
     ...TYPOGRAPHY.h2,
-    color: COLORS.onBackground,
     marginRight: 12,
     flex: 1,
   },
@@ -463,16 +574,13 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onBackground,
     fontWeight: "600",
   },
   taskDescription: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "80",
     lineHeight: 20,
   },
   infoSection: {
-    backgroundColor: COLORS.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
@@ -485,11 +593,9 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "60",
   },
   infoValue: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
     fontWeight: "500",
   },
   checklistSection: {
@@ -503,7 +609,6 @@ const styles = StyleSheet.create({
   },
   checklistTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
     fontWeight: "600",
   },
   addItemButton: {
@@ -517,16 +622,13 @@ const styles = StyleSheet.create({
   addItemInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "30",
     borderRadius: 8,
     padding: 12,
     marginRight: 8,
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
   },
   addItemSubmitButton: {
     padding: 12,
-    backgroundColor: COLORS.primary + "20",
     borderRadius: 8,
   },
   checklistItem: {
@@ -534,7 +636,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: COLORS.surface,
     borderRadius: 8,
     marginBottom: 8,
   },
@@ -544,18 +645,15 @@ const styles = StyleSheet.create({
   checklistItemText: {
     flex: 1,
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground,
   },
   completedItemText: {
     textDecorationLine: "line-through",
-    color: COLORS.onBackground + "60",
   },
   deleteItemButton: {
     padding: 4,
   },
   emptyChecklist: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "60",
     textAlign: "center",
     fontStyle: "italic",
     paddingVertical: 20,
@@ -563,7 +661,6 @@ const styles = StyleSheet.create({
   modalFooter: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: COLORS.onBackground + "20",
   },
   footerButtons: {
     flexDirection: "row",
@@ -574,22 +671,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: COLORS.primary + "20",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.primary,
   },
   completedButton: {
-    backgroundColor: COLORS.primary,
+    // backgroundColor는 인라인으로 적용
   },
   completeButtonText: {
     ...TYPOGRAPHY.button,
-    color: COLORS.primary,
     marginLeft: 8,
   },
   completedButtonText: {
-    color: COLORS.onPrimary,
+    // color는 인라인으로 적용
   },
 });
 

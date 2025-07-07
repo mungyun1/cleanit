@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { HouseholdTask, FrequencySettings } from "../types";
-import { COLORS, TYPOGRAPHY } from "../constants";
+import { TYPOGRAPHY } from "../constants";
+import { useTheme } from "../contexts/ThemeContext";
 import TaskDetailModal from "./TaskDetailModal";
 
 interface CleaningTaskItemProps {
@@ -22,7 +23,9 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
   onUpdateTask,
   onDeleteTask,
 }) => {
+  const { colors } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
+
   const getFrequencyText = (frequency: FrequencySettings) => {
     const dayNames = {
       monday: "월요일",
@@ -67,17 +70,17 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
   const getSpaceColor = (space: string) => {
     switch (space) {
       case "거실":
-        return COLORS.livingRoom;
+        return colors.livingRoom;
       case "주방":
-        return COLORS.kitchen;
+        return colors.kitchen;
       case "욕실":
-        return COLORS.bathroom;
+        return colors.bathroom;
       case "화장실":
-        return COLORS.toilet;
+        return colors.toilet;
       case "침실":
-        return COLORS.bedroom;
+        return colors.bedroom;
       default:
-        return COLORS.common;
+        return colors.common;
     }
   };
 
@@ -94,7 +97,7 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
       case "towels":
         return "#FCE4EC"; // 연한 분홍색
       default:
-        return COLORS.common;
+        return colors.common;
     }
   };
 
@@ -117,9 +120,9 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
 
   const getCategoryIcon = () => {
     if (task.category === "laundry") {
-      return <Ionicons name="shirt" size={16} color={COLORS.secondary} />;
+      return <Ionicons name="shirt" size={16} color={colors.secondary} />;
     }
-    return <Ionicons name="brush" size={16} color={COLORS.primary} />;
+    return <Ionicons name="brush" size={16} color={colors.primary} />;
   };
 
   const handleItemPress = () => {
@@ -139,7 +142,11 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
   return (
     <>
       <TouchableOpacity
-        style={[styles.container, task.isCompleted && styles.completed]}
+        style={[
+          styles.container,
+          { backgroundColor: colors.surface, shadowColor: colors.onBackground },
+          task.isCompleted && styles.completed,
+        ]}
         onPress={handleItemPress}
         activeOpacity={0.7}
       >
@@ -151,7 +158,11 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
                 <Text
                   style={[
                     styles.title,
-                    task.isCompleted && styles.completedText,
+                    { color: colors.onBackground },
+                    task.isCompleted && [
+                      styles.completedText,
+                      { color: colors.onBackground + "60" },
+                    ],
                   ]}
                 >
                   {task.title}
@@ -168,7 +179,7 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
                   },
                 ]}
               >
-                <Text style={styles.tagText}>
+                <Text style={[styles.tagText, { color: colors.onBackground }]}>
                   {task.category === "cleaning"
                     ? task.space
                     : getLaundryTypeText(task.laundryType || "")}
@@ -183,7 +194,7 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
                 name={task.isCompleted ? "checkmark-circle" : "ellipse-outline"}
                 size={24}
                 color={
-                  task.isCompleted ? COLORS.primary : COLORS.onBackground + "60"
+                  task.isCompleted ? colors.primary : colors.onBackground + "60"
                 }
               />
             </TouchableOpacity>
@@ -193,7 +204,11 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
             <Text
               style={[
                 styles.description,
-                task.isCompleted && styles.completedText,
+                { color: colors.onBackground + "80" },
+                task.isCompleted && [
+                  styles.completedText,
+                  { color: colors.onBackground + "60" },
+                ],
               ]}
             >
               {task.description}
@@ -201,7 +216,7 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
           )}
 
           <View style={styles.footer}>
-            <Text style={styles.frequency}>
+            <Text style={[styles.frequency, { color: colors.primary }]}>
               {getFrequencyText(task.frequency)}
             </Text>
           </View>
@@ -223,15 +238,13 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: COLORS.onBackground,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   completed: {
     opacity: 0.6,
@@ -259,13 +272,11 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.h4,
-    color: COLORS.onBackground,
     marginLeft: 6,
     flex: 1,
   },
   completedText: {
     textDecorationLine: "line-through",
-    color: COLORS.onBackground + "60",
   },
   tag: {
     paddingHorizontal: 8,
@@ -274,7 +285,6 @@ const styles = StyleSheet.create({
   },
   tagText: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onBackground,
     fontWeight: "600",
   },
   checkbox: {
@@ -282,7 +292,6 @@ const styles = StyleSheet.create({
   },
   description: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "80",
     marginBottom: 8,
   },
   footer: {
@@ -292,12 +301,10 @@ const styles = StyleSheet.create({
   },
   frequency: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.primary,
     fontWeight: "600",
   },
   lastCompleted: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onBackground + "60",
   },
 });
 

@@ -1,20 +1,21 @@
 import { COLORS } from "../constants";
 import { DayOfWeek } from "../types";
 
-export const getSpaceColor = (space: string) => {
+export const getSpaceColor = (space: string, colors?: any) => {
+  const colorPalette = colors || COLORS;
   switch (space) {
     case "거실":
-      return COLORS.livingRoom;
+      return colorPalette.livingRoom;
     case "주방":
-      return COLORS.kitchen;
+      return colorPalette.kitchen;
     case "욕실":
-      return COLORS.bathroom;
+      return colorPalette.bathroom;
     case "화장실":
-      return COLORS.toilet;
+      return colorPalette.toilet;
     case "침실":
-      return COLORS.bedroom;
+      return colorPalette.bedroom;
     default:
-      return COLORS.common;
+      return colorPalette.common;
   }
 };
 

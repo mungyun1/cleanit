@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
-import { COLORS, TYPOGRAPHY } from "../constants";
+import { TYPOGRAPHY } from "../constants";
+import { useTheme } from "../contexts/ThemeContext";
 import Header from "../components/Header";
 import ScheduledTasksModal from "../components/ScheduledTasksModal";
 import {
@@ -14,6 +15,8 @@ import {
 } from "../data/mockData";
 
 const CalendarScreen: React.FC = () => {
+  const { colors, isDarkMode } = useTheme();
+  console.log("isDarkMode:", isDarkMode, "surface:", colors.surface);
   const [selectedDate, setSelectedDate] = useState("");
   const [markedDates, setMarkedDates] = useState<CalendarMarkedDates>({});
   const [modalVisible, setModalVisible] = useState(false);
@@ -21,19 +24,14 @@ const CalendarScreen: React.FC = () => {
     []
   );
 
-  // 목데이터 로드
   useEffect(() => {
     setMarkedDates(CALENDAR_MOCK_DATA);
   }, []);
 
   const onDayPress = (day: DateData) => {
     setSelectedDate(day.dateString);
-
-    // 해당 날짜의 예정된 작업 확인
     const tasks = SCHEDULED_TASKS_DATA[day.dateString] || [];
     setSelectedDateTasks(tasks);
-
-    // 작업이 있으면 모달 열기
     if (tasks.length > 0) {
       setModalVisible(true);
     }
@@ -43,20 +41,20 @@ const CalendarScreen: React.FC = () => {
     setModalVisible(false);
   };
 
+  // 강제 다크/라이트 모드 배경색 테스트
   const getTheme = () => ({
-    backgroundColor: COLORS.background,
-    calendarBackground: COLORS.surface,
-    textSectionTitleColor: COLORS.onBackground,
-    selectedDayBackgroundColor: COLORS.primary,
-    selectedDayTextColor: COLORS.onPrimary,
-    todayTextColor: COLORS.primary,
-    dayTextColor: COLORS.onBackground,
-    textDisabledColor: COLORS.onBackground + "40",
-    dotColor: COLORS.primary,
-    selectedDotColor: COLORS.onPrimary,
-    arrowColor: COLORS.primary,
-    monthTextColor: COLORS.onBackground,
-    indicatorColor: COLORS.primary,
+    calendarBackground: isDarkMode ? "#000000" : "#FFFFFF",
+    textSectionTitleColor: colors.onBackground,
+    selectedDayBackgroundColor: colors.primary,
+    selectedDayTextColor: colors.onPrimary,
+    todayTextColor: colors.primary,
+    dayTextColor: colors.onBackground,
+    textDisabledColor: colors.onBackground + "40",
+    dotColor: colors.primary,
+    selectedDotColor: colors.onPrimary,
+    arrowColor: colors.primary,
+    monthTextColor: colors.onBackground,
+    indicatorColor: colors.primary,
     textDayFontFamily: "System",
     textMonthFontFamily: "System",
     textDayHeaderFontFamily: "System",
@@ -70,12 +68,18 @@ const CalendarScreen: React.FC = () => {
 
   const renderLegend = () => (
     <View style={styles.legendContainer}>
-      <Text style={styles.legendTitle}>범례</Text>
+      <Text style={[styles.legendTitle, { color: colors.onBackground + "80" }]}>
+        범례
+      </Text>
       <View style={styles.legendItems}>
         {LEGEND_DATA.map((item, index) => (
           <View key={index} style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-            <Text style={styles.legendText}>{item.label}</Text>
+            <Text
+              style={[styles.legendText, { color: colors.onBackground + "80" }]}
+            >
+              {item.label}
+            </Text>
           </View>
         ))}
       </View>
@@ -83,7 +87,7 @@ const CalendarScreen: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -96,16 +100,16 @@ const CalendarScreen: React.FC = () => {
           onMenuPress={() => console.log("메뉴 버튼 클릭")}
         />
         <View style={styles.calendarContainer}>
-          <Text style={styles.sectionTitle}>이번 달 청소 현황</Text>
           <View style={styles.calendarWrapper}>
             <Calendar
+              key={isDarkMode ? "dark" : "light"}
               onDayPress={onDayPress}
               markedDates={{
                 ...markedDates,
                 [selectedDate]: {
                   ...markedDates[selectedDate],
                   selected: true,
-                  selectedColor: COLORS.primary,
+                  selectedColor: colors.primary,
                 },
               }}
               theme={getTheme()}
@@ -122,31 +126,93 @@ const CalendarScreen: React.FC = () => {
         </View>
 
         <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>이번 달 통계</Text>
+          <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>
+            이번 달 통계
+          </Text>
           <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
+            <View
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: colors.surface,
+                  shadowColor: colors.onBackground,
+                },
+              ]}
+            >
+              <Text style={[styles.statNumber, { color: colors.primary }]}>
                 {MONTHLY_STATS_MOCK.completedTasks}
               </Text>
-              <Text style={styles.statLabel}>완료된 작업</Text>
+              <Text
+                style={[
+                  styles.statLabel,
+                  { color: colors.onBackground + "80" },
+                ]}
+              >
+                완료된 작업
+              </Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
+            <View
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: colors.surface,
+                  shadowColor: colors.onBackground,
+                },
+              ]}
+            >
+              <Text style={[styles.statNumber, { color: colors.primary }]}>
                 {MONTHLY_STATS_MOCK.incompleteTasks}
               </Text>
-              <Text style={styles.statLabel}>미완료 작업</Text>
+              <Text
+                style={[
+                  styles.statLabel,
+                  { color: colors.onBackground + "80" },
+                ]}
+              >
+                미완료 작업
+              </Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
+            <View
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: colors.surface,
+                  shadowColor: colors.onBackground,
+                },
+              ]}
+            >
+              <Text style={[styles.statNumber, { color: colors.primary }]}>
                 {MONTHLY_STATS_MOCK.completionRate}
               </Text>
-              <Text style={styles.statLabel}>완료율</Text>
+              <Text
+                style={[
+                  styles.statLabel,
+                  { color: colors.onBackground + "80" },
+                ]}
+              >
+                완료율
+              </Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
+            <View
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: colors.surface,
+                  shadowColor: colors.onBackground,
+                },
+              ]}
+            >
+              <Text style={[styles.statNumber, { color: colors.primary }]}>
                 {MONTHLY_STATS_MOCK.consecutiveDays}
               </Text>
-              <Text style={styles.statLabel}>연속 완료일</Text>
+              <Text
+                style={[
+                  styles.statLabel,
+                  { color: colors.onBackground + "80" },
+                ]}
+              >
+                연속 완료일
+              </Text>
             </View>
           </View>
         </View>
@@ -165,7 +231,6 @@ const CalendarScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -177,70 +242,17 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 10,
   },
-  title: {
-    ...TYPOGRAPHY.h1,
-    color: COLORS.onBackground,
-    marginBottom: 5,
-  },
-  subtitle: {
-    ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "80",
-  },
   calendarContainer: {
     paddingHorizontal: 20,
     marginVertical: 20,
   },
   sectionTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
     marginBottom: 15,
   },
   calendarWrapper: {
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     padding: 10,
-    shadowColor: COLORS.onBackground,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginBottom: 15,
-  },
-  legendContainer: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 15,
-    shadowColor: COLORS.onBackground,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  legendTitle: {
-    ...TYPOGRAPHY.h4,
-    color: COLORS.onBackground,
-    marginBottom: 10,
-  },
-  legendItems: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    width: "48%",
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  legendText: {
-    ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "80",
   },
   statsContainer: {
     paddingHorizontal: 20,
@@ -252,27 +264,49 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   statCard: {
-    backgroundColor: COLORS.surface,
     width: "48%",
-    padding: 15,
-    marginBottom: 10,
+    marginBottom: 15,
     borderRadius: 12,
+    padding: 18,
     alignItems: "center",
-    shadowColor: COLORS.onBackground,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   statNumber: {
     ...TYPOGRAPHY.h2,
-    color: COLORS.primary,
     marginBottom: 5,
   },
   statLabel: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onBackground + "80",
-    textAlign: "center",
+  },
+  legendContainer: {
+    marginTop: 18,
+    marginBottom: 10,
+  },
+  legendTitle: {
+    ...TYPOGRAPHY.body2,
+    fontWeight: "bold",
+    marginBottom: 6,
+  },
+  legendItems: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 18,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  legendText: {
+    ...TYPOGRAPHY.caption,
   },
 });
 

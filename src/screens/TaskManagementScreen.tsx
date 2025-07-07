@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, TYPOGRAPHY } from "../constants";
+import { TYPOGRAPHY } from "../constants";
+import { useTheme } from "../contexts/ThemeContext";
 import CleaningTaskItem from "../components/CleaningTaskItem";
 import Header from "../components/Header";
 import AddTaskModal from "../components/AddTaskModal";
@@ -21,6 +22,7 @@ import {
 } from "../data/taskManagementData";
 
 const TaskManagementScreen: React.FC = () => {
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
@@ -46,7 +48,7 @@ const TaskManagementScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -63,15 +65,21 @@ const TaskManagementScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                selectedFilter === FILTER_OPTIONS.ALL && styles.activeFilter,
+                { borderColor: colors.primary },
+                selectedFilter === FILTER_OPTIONS.ALL && {
+                  backgroundColor: colors.primary + "20",
+                },
               ]}
               onPress={() => handleFilterChange(FILTER_OPTIONS.ALL)}
             >
               <Text
                 style={[
                   styles.filterText,
-                  selectedFilter === FILTER_OPTIONS.ALL &&
-                    styles.activeFilterText,
+                  { color: colors.onBackground },
+                  selectedFilter === FILTER_OPTIONS.ALL && {
+                    color: colors.primary,
+                    fontWeight: "bold",
+                  },
                 ]}
               >
                 {FILTER_OPTIONS.ALL}
@@ -80,16 +88,21 @@ const TaskManagementScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                selectedFilter === FILTER_OPTIONS.CLEANING &&
-                  styles.activeFilter,
+                { borderColor: colors.primary },
+                selectedFilter === FILTER_OPTIONS.CLEANING && {
+                  backgroundColor: colors.primary + "20",
+                },
               ]}
               onPress={() => handleFilterChange(FILTER_OPTIONS.CLEANING)}
             >
               <Text
                 style={[
                   styles.filterText,
-                  selectedFilter === FILTER_OPTIONS.CLEANING &&
-                    styles.activeFilterText,
+                  { color: colors.onBackground },
+                  selectedFilter === FILTER_OPTIONS.CLEANING && {
+                    color: colors.primary,
+                    fontWeight: "bold",
+                  },
                 ]}
               >
                 {FILTER_OPTIONS.CLEANING}
@@ -98,16 +111,21 @@ const TaskManagementScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                selectedFilter === FILTER_OPTIONS.LAUNDRY &&
-                  styles.activeFilter,
+                { borderColor: colors.primary },
+                selectedFilter === FILTER_OPTIONS.LAUNDRY && {
+                  backgroundColor: colors.primary + "20",
+                },
               ]}
               onPress={() => handleFilterChange(FILTER_OPTIONS.LAUNDRY)}
             >
               <Text
                 style={[
                   styles.filterText,
-                  selectedFilter === FILTER_OPTIONS.LAUNDRY &&
-                    styles.activeFilterText,
+                  { color: colors.onBackground },
+                  selectedFilter === FILTER_OPTIONS.LAUNDRY && {
+                    color: colors.primary,
+                    fontWeight: "bold",
+                  },
                 ]}
               >
                 {FILTER_OPTIONS.LAUNDRY}
@@ -117,34 +135,67 @@ const TaskManagementScreen: React.FC = () => {
         </View>
 
         <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
+          <View
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: colors.onBackground,
+              },
+            ]}
+          >
             <Ionicons
               name={STAT_CARDS[0].icon}
               size={24}
-              color={COLORS[STAT_CARDS[0].color]}
+              color={colors[STAT_CARDS[0].color] || colors.primary}
             />
-            <Text style={styles.statNumber}>{stats.totalTasks}</Text>
-            <Text style={styles.statLabel}>{STAT_CARDS[0].label}</Text>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>
+              {stats.totalTasks}
+            </Text>
+            <Text
+              style={[styles.statLabel, { color: colors.onBackground + "80" }]}
+            >
+              {STAT_CARDS[0].label}
+            </Text>
           </View>
-          <View style={styles.statCard}>
+          <View
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: colors.onBackground,
+              },
+            ]}
+          >
             <Ionicons
               name={STAT_CARDS[1].icon}
               size={24}
-              color={COLORS[STAT_CARDS[1].color]}
+              color={colors[STAT_CARDS[1].color] || colors.primary}
             />
-            <Text style={styles.statNumber}>{stats.completedTasks}</Text>
-            <Text style={styles.statLabel}>{STAT_CARDS[1].label}</Text>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>
+              {stats.completedTasks}
+            </Text>
+            <Text
+              style={[styles.statLabel, { color: colors.onBackground + "80" }]}
+            >
+              {STAT_CARDS[1].label}
+            </Text>
           </View>
         </View>
 
         <View style={styles.tasksContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>모든 작업</Text>
+            <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>
+              모든 작업
+            </Text>
             <TouchableOpacity
-              style={styles.addButton}
+              style={[
+                styles.addButton,
+                { backgroundColor: colors.primary + "20" },
+              ]}
               onPress={() => setIsAddModalVisible(true)}
             >
-              <Ionicons name="add" size={20} color={COLORS.primary} />
+              <Ionicons name="add" size={20} color={colors.primary} />
             </TouchableOpacity>
           </View>
 
@@ -165,24 +216,49 @@ const TaskManagementScreen: React.FC = () => {
                 <Ionicons
                   name="list-outline"
                   size={48}
-                  color={COLORS.onBackground + "40"}
+                  color={colors.onBackground + "40"}
                 />
               </View>
-              <Text style={styles.emptyStateTitle}>아직 작업이 없어요! 📝</Text>
+              <Text
+                style={[styles.emptyStateTitle, { color: colors.onBackground }]}
+              >
+                아직 작업이 없어요! 📝
+              </Text>
               <View>
-                <Text style={styles.emptyStateDescription}>
+                <Text
+                  style={[
+                    styles.emptyStateDescription,
+                    { color: colors.onBackground + "60" },
+                  ]}
+                >
                   첫 번째 가사 작업을 추가해보세요.
                 </Text>
-                <Text style={styles.emptyStateDescription}>
+                <Text
+                  style={[
+                    styles.emptyStateDescription,
+                    { color: colors.onBackground + "60" },
+                  ]}
+                >
                   정기적인 가사 습관을 만들어보세요.
                 </Text>
               </View>
               <TouchableOpacity
-                style={styles.emptyStateButton}
+                style={[
+                  styles.emptyStateButton,
+                  {
+                    backgroundColor: colors.primary + "20",
+                    borderColor: colors.primary + "30",
+                  },
+                ]}
                 onPress={() => setIsAddModalVisible(true)}
               >
-                <Ionicons name="add" size={20} color={COLORS.primary} />
-                <Text style={styles.emptyStateButtonText}>
+                <Ionicons name="add" size={20} color={colors.primary} />
+                <Text
+                  style={[
+                    styles.emptyStateButtonText,
+                    { color: colors.primary },
+                  ]}
+                >
                   첫 번째 작업 추가하기
                 </Text>
               </TouchableOpacity>
@@ -203,7 +279,6 @@ const TaskManagementScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -211,71 +286,44 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 20,
   },
-  header: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  title: {
-    ...TYPOGRAPHY.h1,
-    color: COLORS.onBackground,
-    marginBottom: 5,
-  },
-  subtitle: {
-    ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "80",
-  },
   filtersContainer: {
     paddingHorizontal: 20,
-    marginVertical: 20,
+    marginTop: 20,
+    marginBottom: 10,
   },
   filterButton: {
-    backgroundColor: COLORS.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 10,
     borderWidth: 1,
-    borderColor: COLORS.onBackground + "20",
-  },
-  activeFilter: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 7,
+    marginRight: 10,
   },
   filterText: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "80",
-  },
-  activeFilterText: {
-    color: COLORS.onPrimary,
-    fontWeight: "600",
+    fontSize: 15,
   },
   statsContainer: {
     flexDirection: "row",
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.surface,
     padding: 15,
     marginHorizontal: 5,
     borderRadius: 12,
     alignItems: "center",
-    shadowColor: COLORS.onBackground,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   statNumber: {
     ...TYPOGRAPHY.h2,
-    color: COLORS.onBackground,
-    marginTop: 5,
     marginBottom: 5,
   },
   statLabel: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.onBackground + "80",
   },
   tasksContainer: {
     paddingHorizontal: 20,
@@ -283,18 +331,18 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
   sectionTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
   },
   addButton: {
-    backgroundColor: COLORS.primary + "20",
     padding: 8,
     borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyStateContainer: {
     alignItems: "center",
@@ -306,30 +354,28 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onBackground,
     textAlign: "center",
     marginBottom: 8,
   },
   emptyStateDescription: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.onBackground + "60",
     textAlign: "center",
     lineHeight: 20,
-    marginBottom: 24,
+    marginBottom: 4,
   },
   emptyStateButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.primary + "20",
+    backgroundColor: undefined,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: COLORS.primary + "30",
+    borderColor: undefined,
+    marginTop: 16,
   },
   emptyStateButtonText: {
     ...TYPOGRAPHY.body2,
-    color: COLORS.primary,
     fontWeight: "600",
     marginLeft: 8,
   },
