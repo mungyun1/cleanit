@@ -23,17 +23,85 @@ const CalendarScreen: React.FC = () => {
     []
   );
 
+  // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
+  const getTodayString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
-    setMarkedDates(CALENDAR_MOCK_DATA);
-  }, []);
+    // SCHEDULED_TASKS_DATA를 기반으로 캘린더 마킹 데이터 생성
+    const generateMarkedDates = () => {
+      const marked: CalendarMarkedDates = {};
+      const today = getTodayString();
+
+      Object.keys(SCHEDULED_TASKS_DATA).forEach((date) => {
+        const tasks = SCHEDULED_TASKS_DATA[date];
+        if (tasks && tasks.length > 0) {
+          // 해당 날짜의 첫 번째 작업 색상을 사용
+          marked[date] = {
+            marked: true,
+            dotColor: tasks[0].color,
+            textColor: colors.onBackground,
+            customStyles: {
+              container: {
+                backgroundColor: tasks[0].color + "20", // 20% 투명도
+                borderRadius: 20,
+                width: 36,
+                height: 36,
+                justifyContent: "center",
+                alignItems: "center",
+              },
+              text: {
+                color: colors.onBackground,
+                fontWeight: "600",
+              },
+            },
+          };
+        }
+      });
+
+      // 오늘 날짜 스타일 추가
+      marked[today] = {
+        ...marked[today],
+        customStyles: {
+          container: {
+            backgroundColor: colors.primary + "40",
+            borderRadius: 20,
+            width: 36,
+            height: 36,
+            justifyContent: "center",
+            alignItems: "center",
+            borderWidth: 2,
+            borderColor: colors.primary,
+          },
+          text: {
+            color: isDarkMode ? "#FFFFFF" : colors.onPrimary,
+            fontWeight: "bold",
+            fontSize: 16,
+          },
+        },
+      };
+
+      return marked;
+    };
+
+    setMarkedDates(generateMarkedDates());
+  }, [colors.onBackground, colors.primary, isDarkMode]);
 
   const onDayPress = (day: DateData) => {
-    setSelectedDate(day.dateString);
     const tasks = SCHEDULED_TASKS_DATA[day.dateString] || [];
-    setSelectedDateTasks(tasks);
-    if (tasks.length > 0) {
-      setModalVisible(true);
+    // 일정이 없는 날짜는 클릭하지 않음
+    if (tasks.length === 0) {
+      return;
     }
+
+    setSelectedDate(day.dateString);
+    setSelectedDateTasks(tasks);
+    setModalVisible(true);
   };
 
   const closeModal = () => {
@@ -46,7 +114,7 @@ const CalendarScreen: React.FC = () => {
     textSectionTitleColor: colors.onBackground,
     selectedDayBackgroundColor: colors.primary,
     selectedDayTextColor: colors.onPrimary,
-    todayTextColor: colors.primary,
+    todayTextColor: isDarkMode ? "#FFFFFF" : colors.primary,
     dayTextColor: colors.onBackground,
     textDisabledColor: colors.onBackground + "40",
     dotColor: colors.primary,
@@ -73,7 +141,16 @@ const CalendarScreen: React.FC = () => {
       <View style={styles.legendItems}>
         {LEGEND_DATA.map((item, index) => (
           <View key={index} style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+            <View
+              style={[
+                styles.legendDot,
+                {
+                  backgroundColor: item.color + "20",
+                  borderWidth: 1,
+                  borderColor: item.color,
+                },
+              ]}
+            />
             <Text
               style={[styles.legendText, { color: colors.onBackground + "80" }]}
             >
@@ -102,14 +179,7 @@ const CalendarScreen: React.FC = () => {
             <Calendar
               key={isDarkMode ? "dark" : "light"}
               onDayPress={onDayPress}
-              markedDates={{
-                ...markedDates,
-                [selectedDate]: {
-                  ...markedDates[selectedDate],
-                  selected: true,
-                  selectedColor: colors.primary,
-                },
-              }}
+              markedDates={markedDates}
               theme={getTheme()}
               enableSwipeMonths={true}
               showWeekNumbers={false}

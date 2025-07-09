@@ -3,7 +3,11 @@ import { COLORS } from "../constants";
 // 캘린더 목데이터 타입 정의
 export interface CalendarMarkedDate {
   marked: boolean;
-  dotColor: string;
+  dotColor?: string;
+  dots?: Array<{
+    key: string;
+    color: string;
+  }>;
   textColor: string;
   selected?: boolean;
   selectedColor?: string;

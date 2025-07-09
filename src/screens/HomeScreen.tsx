@@ -353,13 +353,10 @@ const HomeScreen: React.FC = () => {
             ]}
           >
             <View style={styles.categoryIcon}>
-              <Ionicons name="brush" size={20} color={colors.primary} />
+              <Ionicons name="sparkles" size={20} color={colors.primary} />
             </View>
             <Text
-              style={[
-                styles.categoryStatNumber,
-                { color: colors.onBackground },
-              ]}
+              style={[styles.categoryStatNumber, { color: colors.primary }]}
             >
               {stats.cleaning}
             </Text>
@@ -389,10 +386,7 @@ const HomeScreen: React.FC = () => {
               <Ionicons name="shirt" size={20} color={colors.secondary} />
             </View>
             <Text
-              style={[
-                styles.categoryStatNumber,
-                { color: colors.onBackground },
-              ]}
+              style={[styles.categoryStatNumber, { color: colors.primary }]}
             >
               {stats.laundry}
             </Text>
