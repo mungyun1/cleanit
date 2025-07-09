@@ -9,7 +9,7 @@ const EditTaskScreen = () => (
       title="✏️ 작업 수정"
       subtitle="청소 작업을 수정하세요"
       showBackButton={true}
-      onBackPress={() => console.log("뒤로가기")}
+      onBackPress={() => {}}
     />
     <View style={styles.content}>
       <Text style={styles.placeholderText}>청소 항목 수정 화면</Text>

@@ -39,7 +39,6 @@ const TaskManagementScreen: React.FC = () => {
   } = useTaskManagement();
 
   const handleEditTask = (taskId: string) => {
-    console.log("편집할 작업 ID:", taskId);
     // navigation.navigate("EditTask", { taskId });
   };
 
@@ -59,7 +58,6 @@ const TaskManagementScreen: React.FC = () => {
           title="📋 작업 관리"
           subtitle="모든 청소 작업을 관리하세요"
           showMenuButton={true}
-          onMenuPress={() => console.log("메뉴 버튼 클릭")}
         />
         <View style={styles.filtersContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,10 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { HouseholdTask, ChecklistItem, FrequencySettings } from "../types";
 import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
-import {
-  formatDate as originalFormatDate,
-  getNextDueDate,
-} from "../utils/dateUtils";
+import { getNextDueDate } from "../utils/dateUtils";
 import {
   getSpaceColor,
   getLaundryTypeColor,
@@ -29,7 +26,6 @@ interface TaskDetailModalProps {
   task: HouseholdTask | null;
   visible: boolean;
   onClose: () => void;
-  onToggleComplete?: () => void;
   onEdit?: () => void;
   onUpdateTask?: (updatedTask: HouseholdTask) => void;
   onDeleteTask?: (taskId: string) => void;
@@ -61,7 +57,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   task,
   visible,
   onClose,
-  onToggleComplete,
   onEdit,
   onUpdateTask,
   onDeleteTask,
@@ -71,20 +66,69 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [originalTask, setOriginalTask] = useState<HouseholdTask | null>(null);
+  const [tempTask, setTempTask] = useState<HouseholdTask | null>(null);
 
-  if (!task) return null;
+  // colors 객체를 메모이제이션하여 불필요한 재렌더링 방지
+  const memoizedColors = useMemo(
+    () => ({
+      background: colors.background,
+      onBackground: colors.onBackground,
+      surface: colors.surface,
+      primary: colors.primary,
+      onPrimary: colors.onPrimary,
+      error: colors.error,
+    }),
+    [
+      colors.background,
+      colors.onBackground,
+      colors.surface,
+      colors.primary,
+      colors.onPrimary,
+      colors.error,
+    ]
+  );
 
-  // 원본 작업 상태 저장
+  // 완료 버튼 스타일을 메모이제이션
+  const completeButtonStyle = useMemo(
+    () => [
+      styles.completeButtonTop,
+      {
+        backgroundColor: tempTask?.isCompleted
+          ? memoizedColors.primary
+          : memoizedColors.primary + "20",
+        borderColor: memoizedColors.primary,
+      },
+    ],
+    [tempTask?.isCompleted, memoizedColors.primary]
+  );
+
+  // 완료 버튼 텍스트 스타일을 메모이제이션
+  const completeButtonTextStyle = useMemo(
+    () => [
+      styles.completeButtonText,
+      {
+        color: tempTask?.isCompleted
+          ? memoizedColors.onPrimary
+          : memoizedColors.primary,
+      },
+    ],
+    [tempTask?.isCompleted, memoizedColors.primary, memoizedColors.onPrimary]
+  );
+
+  // 원본 작업 상태 저장 (모달이 열릴 때)
   React.useEffect(() => {
-    if (task && !originalTask) {
-      setOriginalTask(JSON.parse(JSON.stringify(task)));
+    if (task && visible) {
+      // 즉시 상태 설정으로 버벅임 방지
+      const taskCopy = JSON.parse(JSON.stringify(task));
+      setOriginalTask(taskCopy);
+      setTempTask(taskCopy);
     }
-  }, [task, originalTask]);
+  }, [task, visible]);
 
   // 변경사항 확인
   React.useEffect(() => {
-    if (originalTask && task) {
-      // updatedAt을 제외하고 체크리스트 항목 비교
+    if (originalTask && tempTask) {
+      // updatedAt을 제외하고 체크리스트 항목과 완료 상태 비교
       const normalizeChecklistItems = (items: ChecklistItem[]) =>
         items.map((item) => ({
           id: item.id,
@@ -96,21 +140,31 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       const originalNormalized = normalizeChecklistItems(
         originalTask.checklistItems
       );
-      const currentNormalized = normalizeChecklistItems(task.checklistItems);
+      const currentNormalized = normalizeChecklistItems(
+        tempTask.checklistItems
+      );
 
-      const hasChangesNow =
+      const checklistChanged =
         JSON.stringify(originalNormalized) !==
         JSON.stringify(currentNormalized);
+
+      const completionChanged =
+        originalTask.isCompleted !== tempTask.isCompleted;
+
+      const hasChangesNow = checklistChanged || completionChanged;
       setHasChanges(hasChangesNow);
     }
-  }, [task, originalTask]);
+  }, [tempTask, originalTask]);
+
+  // 모달이 보이지 않으면 렌더링하지 않음
+  if (!visible) return null;
 
   const handleToggleChecklistItem = (itemId: string) => {
-    if (!onUpdateTask) return;
+    if (!tempTask) return;
 
     const updatedTask = {
-      ...task,
-      checklistItems: task.checklistItems.map((item) =>
+      ...tempTask,
+      checklistItems: tempTask.checklistItems.map((item) =>
         item.id === itemId
           ? { ...item, isCompleted: !item.isCompleted, updatedAt: new Date() }
           : item
@@ -118,11 +172,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       updatedAt: new Date(),
     };
 
-    onUpdateTask(updatedTask);
+    setTempTask(updatedTask);
   };
 
   const handleAddChecklistItem = () => {
-    if (!newChecklistItem.trim() || !onUpdateTask) return;
+    if (!newChecklistItem.trim() || !tempTask) return;
 
     const newItem: ChecklistItem = {
       id: Date.now().toString(),
@@ -133,37 +187,39 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     };
 
     const updatedTask = {
-      ...task,
-      checklistItems: [...task.checklistItems, newItem],
+      ...tempTask,
+      checklistItems: [...tempTask.checklistItems, newItem],
       updatedAt: new Date(),
     };
 
-    onUpdateTask(updatedTask);
+    setTempTask(updatedTask);
     setNewChecklistItem("");
     setIsAddingItem(false);
   };
 
   const handleDeleteChecklistItem = (itemId: string) => {
-    if (!onUpdateTask) return;
+    if (!tempTask) return;
 
     const updatedTask = {
-      ...task,
-      checklistItems: task.checklistItems.filter((item) => item.id !== itemId),
+      ...tempTask,
+      checklistItems: tempTask.checklistItems.filter(
+        (item) => item.id !== itemId
+      ),
       updatedAt: new Date(),
     };
 
-    onUpdateTask(updatedTask);
+    setTempTask(updatedTask);
   };
 
   const handleDeleteTask = () => {
-    Alert.alert("작업 삭제", `"${task.title}" 작업을 삭제하시겠습니까?`, [
+    Alert.alert("작업 삭제", `"${tempTask?.title}" 작업을 삭제하시겠습니까?`, [
       { text: "취소", style: "cancel" },
       {
         text: "삭제",
         style: "destructive",
         onPress: () => {
           if (onDeleteTask) {
-            onDeleteTask(task.id);
+            onDeleteTask(tempTask?.id || "");
             onClose();
           }
         },
@@ -171,30 +227,50 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     ]);
   };
 
+  const handleClose = () => {
+    // 모달을 닫을 때 즉시 상태 초기화
+    setTempTask(null);
+    setOriginalTask(null);
+    setHasChanges(false);
+    setNewChecklistItem("");
+    setIsAddingItem(false);
+    onClose();
+  };
+
   return (
     <Modal
       visible={visible}
       animationType="none"
       transparent={true}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
+      hardwareAccelerated={true}
     >
       <View style={styles.modalOverlay}>
         <View
           style={[
             styles.modalContainer,
-            { backgroundColor: colors.background },
+            { backgroundColor: memoizedColors.background },
           ]}
         >
           <View
             style={[
               styles.modalHeader,
-              { borderBottomColor: colors.onBackground + "20" },
+              { borderBottomColor: memoizedColors.onBackground + "20" },
             ]}
           >
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color={colors.onBackground} />
+            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+              <Ionicons
+                name="close"
+                size={24}
+                color={memoizedColors.onBackground}
+              />
             </TouchableOpacity>
-            <Text style={[styles.modalTitle, { color: colors.onBackground }]}>
+            <Text
+              style={[
+                styles.modalTitle,
+                { color: memoizedColors.onBackground },
+              ]}
+            >
               작업 상세
             </Text>
             <View style={styles.headerActions} />
@@ -203,106 +279,108 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           <ScrollView
             style={styles.modalContent}
             showsVerticalScrollIndicator={false}
+            removeClippedSubviews={true}
           >
             <View style={styles.taskHeader}>
               <View style={styles.titleSection}>
                 <Text
-                  style={[styles.taskTitle, { color: colors.onBackground }]}
+                  style={[
+                    styles.taskTitle,
+                    { color: memoizedColors.onBackground },
+                  ]}
                 >
-                  {task.title}
+                  {tempTask?.title || "작업 정보를 불러오는 중..."}
                 </Text>
                 <View
                   style={[
                     styles.categoryTag,
                     {
                       backgroundColor:
-                        task.category === "cleaning"
-                          ? getSpaceColor(task.space || "", colors)
-                          : getLaundryTypeColor(task.laundryType || ""),
+                        tempTask?.category === "cleaning"
+                          ? getSpaceColor(tempTask?.space || "", memoizedColors)
+                          : getLaundryTypeColor(tempTask?.laundryType || ""),
                     },
                   ]}
                 >
                   <Text
                     style={[
                       styles.categoryText,
-                      { color: colors.onBackground },
+                      { color: memoizedColors.onBackground },
                     ]}
                   >
-                    {task.category === "cleaning"
-                      ? task.space
-                      : getLaundryTypeText(task.laundryType || "")}
+                    {tempTask?.category === "cleaning"
+                      ? tempTask?.space
+                      : getLaundryTypeText(tempTask?.laundryType || "")}
                   </Text>
                 </View>
               </View>
 
-              {task.description && (
+              {tempTask?.description && (
                 <Text
                   style={[
                     styles.taskDescription,
-                    { color: colors.onBackground + "80" },
+                    { color: memoizedColors.onBackground + "80" },
                   ]}
                 >
-                  {task.description}
+                  {tempTask.description}
                 </Text>
               )}
 
               <TouchableOpacity
                 onPress={() => {
-                  onToggleComplete?.();
-                  // if (!task.isCompleted) {
-                  //   onClose();
-                  // }
+                  if (tempTask) {
+                    const updatedTask = {
+                      ...tempTask,
+                      isCompleted: !tempTask.isCompleted,
+                      updatedAt: new Date(),
+                    };
+                    setTempTask(updatedTask);
+                  }
                 }}
-                style={[
-                  styles.completeButtonTop,
-                  {
-                    backgroundColor: colors.primary + "20",
-                    borderColor: colors.primary,
-                  },
-                  task.isCompleted && [
-                    styles.completedButtonTop,
-                    { backgroundColor: colors.primary },
-                  ],
-                ]}
+                activeOpacity={0.7}
+                style={completeButtonStyle}
               >
                 <Ionicons
                   name={
-                    task.isCompleted ? "checkmark-circle" : "ellipse-outline"
+                    tempTask?.isCompleted
+                      ? "checkmark-circle"
+                      : "ellipse-outline"
                   }
                   size={20}
-                  color={task.isCompleted ? colors.onPrimary : colors.primary}
+                  color={
+                    tempTask?.isCompleted
+                      ? memoizedColors.onPrimary
+                      : memoizedColors.primary
+                  }
                 />
-                <Text
-                  style={[
-                    styles.completeButtonText,
-                    { color: colors.primary },
-                    task.isCompleted && [
-                      styles.completedButtonText,
-                      { color: colors.onPrimary },
-                    ],
-                  ]}
-                >
-                  {task.isCompleted ? "완료됨" : "완료하기"}
+                <Text style={completeButtonTextStyle}>
+                  {tempTask?.isCompleted ? "완료됨" : "완료하기"}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <View
-              style={[styles.infoSection, { backgroundColor: colors.surface }]}
+              style={[
+                styles.infoSection,
+                { backgroundColor: memoizedColors.surface },
+              ]}
             >
               <View style={styles.infoRow}>
                 <Text
                   style={[
                     styles.infoLabel,
-                    { color: colors.onBackground + "60" },
+                    { color: memoizedColors.onBackground + "60" },
                   ]}
                 >
                   주기
                 </Text>
                 <Text
-                  style={[styles.infoValue, { color: colors.onBackground }]}
+                  style={[
+                    styles.infoValue,
+                    { color: memoizedColors.onBackground },
+                  ]}
                 >
-                  {getFrequencyText(task.frequency)}
+                  {getFrequencyText(tempTask?.frequency)}
                 </Text>
               </View>
 
@@ -310,16 +388,19 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 <Text
                   style={[
                     styles.infoLabel,
-                    { color: colors.onBackground + "60" },
+                    { color: memoizedColors.onBackground + "60" },
                   ]}
                 >
                   마지막 작업
                 </Text>
                 <Text
-                  style={[styles.infoValue, { color: colors.onBackground }]}
+                  style={[
+                    styles.infoValue,
+                    { color: memoizedColors.onBackground },
+                  ]}
                 >
-                  {task.lastCompleted
-                    ? formatDate(task.lastCompleted)
+                  {tempTask?.lastCompleted
+                    ? formatDate(tempTask.lastCompleted)
                     : "기록 없음"}
                 </Text>
               </View>
@@ -328,18 +409,21 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 <Text
                   style={[
                     styles.infoLabel,
-                    { color: colors.onBackground + "60" },
+                    { color: memoizedColors.onBackground + "60" },
                   ]}
                 >
                   다음 예정일
                 </Text>
                 <Text
-                  style={[styles.infoValue, { color: colors.onBackground }]}
+                  style={[
+                    styles.infoValue,
+                    { color: memoizedColors.onBackground },
+                  ]}
                 >
                   {getNextDueDate(
-                    task.lastCompleted,
-                    task.createdAt,
-                    task.frequency
+                    tempTask?.lastCompleted || new Date(),
+                    tempTask?.createdAt || new Date(),
+                    tempTask?.frequency
                   )}
                 </Text>
               </View>
@@ -350,7 +434,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 <Text
                   style={[
                     styles.checklistTitle,
-                    { color: colors.onBackground },
+                    { color: memoizedColors.onBackground },
                   ]}
                 >
                   체크리스트
@@ -362,7 +446,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <Ionicons
                     name={isAddingItem ? "remove" : "add"}
                     size={20}
-                    color={colors.primary}
+                    color={memoizedColors.primary}
                   />
                 </TouchableOpacity>
               </View>
@@ -373,12 +457,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     style={[
                       styles.addItemInput,
                       {
-                        borderColor: colors.onBackground + "30",
-                        color: colors.onBackground,
+                        borderColor: memoizedColors.onBackground + "30",
+                        color: memoizedColors.onBackground,
                       },
                     ]}
                     placeholder="새 체크리스트 항목 추가"
-                    placeholderTextColor={colors.onBackground + "60"}
+                    placeholderTextColor={memoizedColors.onBackground + "60"}
                     value={newChecklistItem}
                     onChangeText={setNewChecklistItem}
                     onSubmitEditing={handleAddChecklistItem}
@@ -388,25 +472,26 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     onPress={handleAddChecklistItem}
                     style={[
                       styles.addItemSubmitButton,
-                      { backgroundColor: colors.primary + "20" },
+                      { backgroundColor: memoizedColors.primary + "20" },
                     ]}
                   >
                     <Ionicons
                       name="checkmark"
                       size={20}
-                      color={colors.primary}
+                      color={memoizedColors.primary}
                     />
                   </TouchableOpacity>
                 </View>
               )}
 
-              {task.checklistItems.length > 0 ? (
-                task.checklistItems.map((item) => (
+              {tempTask?.checklistItems &&
+              tempTask.checklistItems.length > 0 ? (
+                tempTask.checklistItems.map((item) => (
                   <View
                     key={item.id}
                     style={[
                       styles.checklistItem,
-                      { backgroundColor: colors.surface },
+                      { backgroundColor: memoizedColors.surface },
                     ]}
                   >
                     <TouchableOpacity
@@ -422,18 +507,18 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                         size={20}
                         color={
                           item.isCompleted
-                            ? colors.primary
-                            : colors.onBackground + "60"
+                            ? memoizedColors.primary
+                            : memoizedColors.onBackground + "60"
                         }
                       />
                     </TouchableOpacity>
                     <Text
                       style={[
                         styles.checklistItemText,
-                        { color: colors.onBackground },
+                        { color: memoizedColors.onBackground },
                         item.isCompleted && [
                           styles.completedItemText,
-                          { color: colors.onBackground + "60" },
+                          { color: memoizedColors.onBackground + "60" },
                         ],
                       ]}
                     >
@@ -443,7 +528,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       onPress={() => handleDeleteChecklistItem(item.id)}
                       style={styles.deleteItemButton}
                     >
-                      <Ionicons name="close" size={16} color={colors.error} />
+                      <Ionicons
+                        name="close"
+                        size={16}
+                        color={memoizedColors.error}
+                      />
                     </TouchableOpacity>
                   </View>
                 ))
@@ -451,7 +540,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 <Text
                   style={[
                     styles.emptyChecklist,
-                    { color: colors.onBackground + "60" },
+                    { color: memoizedColors.onBackground + "60" },
                   ]}
                 >
                   체크리스트 항목이 없습니다.
@@ -463,7 +552,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           <View
             style={[
               styles.modalFooter,
-              { borderTopColor: colors.onBackground + "20" },
+              { borderTopColor: memoizedColors.onBackground + "20" },
             ]}
           >
             <View
@@ -479,17 +568,21 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   style={[
                     styles.deleteFooterButton,
                     {
-                      backgroundColor: colors.error,
-                      borderColor: colors.error,
+                      backgroundColor: memoizedColors.error,
+                      borderColor: memoizedColors.error,
                       borderWidth: 1,
                     },
                   ]}
                 >
-                  <Ionicons name="trash" size={16} color={colors.onPrimary} />
+                  <Ionicons
+                    name="trash"
+                    size={16}
+                    color={memoizedColors.onPrimary}
+                  />
                   <Text
                     style={[
                       styles.deleteFooterButtonText,
-                      { color: colors.onPrimary },
+                      { color: memoizedColors.onPrimary },
                     ]}
                   >
                     삭제
@@ -498,16 +591,25 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               )}
               {onEdit && (
                 <TouchableOpacity
-                  onPress={hasChanges ? onEdit : undefined}
+                  onPress={
+                    hasChanges
+                      ? () => {
+                          if (tempTask && onUpdateTask) {
+                            onUpdateTask(tempTask);
+                          }
+                          onEdit();
+                        }
+                      : undefined
+                  }
                   style={[
                     styles.editButton,
                     {
                       backgroundColor: hasChanges
-                        ? colors.primary + "10"
-                        : colors.surface,
+                        ? memoizedColors.primary + "10"
+                        : memoizedColors.surface,
                       borderColor: hasChanges
-                        ? colors.primary + "40"
-                        : colors.onBackground + "10",
+                        ? memoizedColors.primary + "40"
+                        : memoizedColors.onBackground + "10",
                       flex: 1,
                     },
                     !hasChanges && styles.editButtonDisabled,
@@ -519,7 +621,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     name="pencil"
                     size={16}
                     color={
-                      hasChanges ? colors.primary : colors.onBackground + "40"
+                      hasChanges
+                        ? memoizedColors.primary
+                        : memoizedColors.onBackground + "40"
                     }
                   />
                   <Text
@@ -527,8 +631,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       styles.editButtonText,
                       {
                         color: hasChanges
-                          ? colors.primary
-                          : colors.onBackground + "40",
+                          ? memoizedColors.primary
+                          : memoizedColors.onBackground + "40",
                       },
                     ]}
                   >
@@ -641,9 +745,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginTop: 8,
   },
-  completedButtonTop: {
-    // backgroundColor는 인라인으로 적용
-  },
   infoSection: {
     padding: 16,
     borderRadius: 12,
@@ -730,9 +831,6 @@ const styles = StyleSheet.create({
   completeButtonText: {
     ...TYPOGRAPHY.button,
     marginLeft: 8,
-  },
-  completedButtonText: {
-    // color는 인라인으로 적용
   },
   deleteFooterButton: {
     flexDirection: "row",

@@ -411,40 +411,5 @@ export const LEGEND_DATA: LegendItem[] = [
   { color: COLORS.common, label: "공용" },
 ];
 
-// 캘린더 마킹 데이터 생성 함수
-export const generateCalendarMarkedDates = (): CalendarMarkedDates => {
-  const markedDates: CalendarMarkedDates = {};
-
-  Object.keys(SCHEDULED_TASKS_DATA).forEach((date) => {
-    const tasks = SCHEDULED_TASKS_DATA[date];
-    if (tasks.length > 0) {
-      // 첫 번째 작업의 색상을 사용
-      markedDates[date] = {
-        marked: true,
-        dotColor: tasks[0].color,
-        textColor: COLORS.onBackground,
-        // 동그라미 배경을 위한 추가 스타일
-        customStyles: {
-          container: {
-            backgroundColor: tasks[0].color + "20", // 투명도 20%
-            borderRadius: 20,
-            width: 36,
-            height: 36,
-            justifyContent: "center",
-            alignItems: "center",
-          },
-          text: {
-            color: COLORS.onBackground,
-            fontWeight: "600",
-          },
-        },
-      };
-    }
-  });
-
-  return markedDates;
-};
-
 // 캘린더 샘플 데이터
-export const CALENDAR_MOCK_DATA: CalendarMarkedDates =
-  generateCalendarMarkedDates();
+export const CALENDAR_MOCK_DATA: CalendarMarkedDates = {};

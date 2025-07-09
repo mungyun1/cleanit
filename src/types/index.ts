@@ -7,14 +7,15 @@ export interface ChecklistItem {
   updatedAt: Date;
 }
 
-// 가사 작업 타입 (청소 + 빨래)
+// 가사 작업 타입 (청소 + 빨래 + 반려동물)
 export interface HouseholdTask {
   id: string;
   title: string;
   description?: string;
-  category: "cleaning" | "laundry"; // 청소 또는 빨래
+  category: "cleaning" | "laundry" | "pet"; // 청소, 빨래, 또는 반려동물
   space?: string; // 청소용 공간 (거실, 주방, 욕실 등)
   laundryType?: "whites" | "colors" | "delicates" | "bedding" | "towels"; // 빨래용 타입
+  petType?: "dog" | "cat" | "bird" | "fish" | "hamster"; // 반려동물 타입
   frequency: FrequencySettings;
   lastCompleted?: Date;
   isCompleted: boolean;
@@ -35,6 +36,12 @@ export interface LaundryTask extends HouseholdTask {
   laundryType: "whites" | "colors" | "delicates" | "bedding" | "towels";
 }
 
+// 반려동물 작업 타입
+export interface PetTask extends HouseholdTask {
+  category: "pet";
+  petType: "dog" | "cat" | "bird" | "fish" | "hamster";
+}
+
 // 청소 주기 타입
 export type Frequency = "daily" | "weekly" | "biweekly" | "monthly" | "custom";
 
@@ -48,11 +55,16 @@ export type DayOfWeek =
   | "saturday"
   | "sunday";
 
+// 월간 주기 타입
+export type MonthlyWeek = "first" | "second" | "third" | "fourth" | "last";
+
 // 청소 주기 설정 타입
 export interface FrequencySettings {
   type?: Frequency; // 선택되지 않은 상태를 허용
   daysOfWeek?: DayOfWeek[]; // weekly, biweekly일 때 사용 (여러 요일 선택 가능)
   customDays?: number; // custom일 때 사용 (예: 3일마다)
+  monthlyWeek?: MonthlyWeek; // monthly일 때 사용 (몇째주)
+  monthlyDay?: DayOfWeek; // monthly일 때 사용 (무슨 요일)
 }
 
 // 공간 타입

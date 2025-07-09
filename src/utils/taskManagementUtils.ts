@@ -57,19 +57,6 @@ export const sortTasksByDate = (
   });
 };
 
-export const sortTasksByTitle = (
-  tasks: HouseholdTask[],
-  order: "asc" | "desc" = "asc"
-): HouseholdTask[] => {
-  return [...tasks].sort((a, b) => {
-    const titleA = a.title.toLowerCase();
-    const titleB = b.title.toLowerCase();
-    return order === "asc"
-      ? titleA.localeCompare(titleB)
-      : titleB.localeCompare(titleA);
-  });
-};
-
 export const sortTasksByCompletion = (
   tasks: HouseholdTask[]
 ): HouseholdTask[] => {
@@ -136,29 +123,4 @@ export const searchTasks = (
       task.space?.toLowerCase().includes(term) ||
       task.laundryType?.toLowerCase().includes(term)
   );
-};
-
-// 작업 그룹화 함수
-export const groupTasksByCategory = (tasks: HouseholdTask[]) => {
-  const grouped = {
-    cleaning: tasks.filter((task) => task.category === "cleaning"),
-    laundry: tasks.filter((task) => task.category === "laundry"),
-  };
-
-  return grouped;
-};
-
-export const groupTasksBySpace = (tasks: HouseholdTask[]) => {
-  const grouped: Record<string, HouseholdTask[]> = {};
-
-  tasks.forEach((task) => {
-    if (task.space) {
-      if (!grouped[task.space]) {
-        grouped[task.space] = [];
-      }
-      grouped[task.space].push(task);
-    }
-  });
-
-  return grouped;
 };

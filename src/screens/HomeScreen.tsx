@@ -56,7 +56,6 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleEditTask = (taskId: string) => {
-    console.log("편집할 작업 ID:", taskId);
     // navigation.navigate("EditTask", { taskId });
   };
 

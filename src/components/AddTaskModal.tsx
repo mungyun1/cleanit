@@ -13,24 +13,33 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { HouseholdTask, ChecklistItem, FrequencySettings } from "../types";
+import {
+  HouseholdTask,
+  ChecklistItem,
+  FrequencySettings,
+  MonthlyWeek,
+} from "../types";
 import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
 import {
   SPACES,
   LAUNDRY_TYPES,
+  PET_TYPES,
   FREQUENCIES,
   DAYS_OF_WEEK,
+  MONTHLY_WEEKS,
 } from "../data/taskFormData";
 import {
   createChecklistItem,
   getCleaningChecklistTemplate,
   getLaundryChecklistTemplate,
+  getPetChecklistTemplate,
   generateAutoTitle,
   isDefaultTitle,
   toggleDayOfWeek,
   validateTaskForm,
 } from "../utils/taskFormUtils";
+import CustomInputField from "./CustomInputField";
 
 interface AddTaskModalProps {
   visible: boolean;
@@ -48,11 +57,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const { colors } = useTheme();
   const [title, setTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<
-    "cleaning" | "laundry"
+    "cleaning" | "laundry" | "pet"
   >("cleaning");
   const [selectedSpace, setSelectedSpace] = useState("");
   const [selectedLaundryType, setSelectedLaundryType] = useState<
     "whites" | "colors" | "delicates" | "bedding" | "towels" | undefined
+  >(undefined);
+  const [selectedPetType, setSelectedPetType] = useState<
+    "dog" | "cat" | "bird" | "fish" | "hamster" | undefined
   >(undefined);
   const [selectedFrequency, setSelectedFrequency] = useState<FrequencySettings>(
     {
@@ -60,13 +72,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       daysOfWeek: [],
     }
   );
-  const [customSpace, setCustomSpace] = useState("");
-  const [isAddingCustomSpace, setIsAddingCustomSpace] = useState(false);
+  const [customSpaces, setCustomSpaces] = useState<string[]>([]);
+  const [customLaundryTypes, setCustomLaundryTypes] = useState<string[]>([]);
+  const [customPetTypes, setCustomPetTypes] = useState<string[]>([]);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [isAddingChecklistItem, setIsAddingChecklistItem] = useState(false);
 
-  // 카테고리나 공간/빨래 타입 선택 시 기본 체크리스트 템플릿 적용 및 제목 자동 완성
+  // 카테고리나 공간/빨래 타입/반려동물 타입 선택 시 기본 체크리스트 템플릿 적용 및 제목 자동 완성
   useEffect(() => {
     if (selectedCategory === "cleaning" && selectedSpace) {
       // 제목 자동 완성 (기존 제목이 비어있거나 기본 제목인 경우에만)
@@ -97,20 +110,95 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       const newChecklistItems =
         getLaundryChecklistTemplate(selectedLaundryType);
       setChecklistItems(newChecklistItems);
+    } else if (selectedCategory === "pet" && selectedPetType) {
+      // 반려동물 타입에 따른 제목 자동 완성
+      const petTypeText = PET_TYPES.find(
+        (pt) => pt.value === selectedPetType
+      )?.label;
+      if (isDefaultTitle(title, "pet")) {
+        setTitle(
+          generateAutoTitle(
+            "pet",
+            undefined,
+            undefined,
+            undefined,
+            selectedPetType,
+            petTypeText
+          )
+        );
+      }
+
+      // 반려동물 기본 체크리스트 템플릿 적용
+      const newChecklistItems = getPetChecklistTemplate(selectedPetType);
+      setChecklistItems(newChecklistItems);
     }
-  }, [selectedCategory, selectedSpace, selectedLaundryType]);
+  }, [selectedCategory, selectedSpace, selectedLaundryType, selectedPetType]);
 
-  const handleAddCustomSpace = () => {
-    if (!customSpace.trim()) return;
-
-    if (SPACES.includes(customSpace.trim())) {
+  const handleAddCustomSpace = (value: string) => {
+    if (SPACES.includes(value) || customSpaces.includes(value)) {
       Alert.alert("오류", "이미 존재하는 공간입니다.");
       return;
     }
+    setCustomSpaces([...customSpaces, value]);
+    setSelectedSpace(value);
+  };
 
-    setSelectedSpace(customSpace.trim());
-    setCustomSpace("");
-    setIsAddingCustomSpace(false);
+  const handleAddCustomLaundryType = (value: string) => {
+    const existingTypes = LAUNDRY_TYPES.map((type) => type.label);
+    if (existingTypes.includes(value) || customLaundryTypes.includes(value)) {
+      Alert.alert("오류", "이미 존재하는 빨래 타입입니다.");
+      return;
+    }
+    setCustomLaundryTypes([...customLaundryTypes, value]);
+    setSelectedLaundryType(value as any);
+  };
+
+  const handleAddCustomPetType = (value: string) => {
+    const existingTypes = PET_TYPES.map((type) => type.label);
+    if (existingTypes.includes(value) || customPetTypes.includes(value)) {
+      Alert.alert("오류", "이미 존재하는 반려동물 타입입니다.");
+      return;
+    }
+    setCustomPetTypes([...customPetTypes, value]);
+    setSelectedPetType(value as any);
+  };
+
+  const handleDeleteCustomSpace = (space: string) => {
+    setCustomSpaces(customSpaces.filter((s) => s !== space));
+    if (selectedSpace === space) {
+      setSelectedSpace("");
+    }
+  };
+
+  const handleDeleteCustomLaundryType = (type: string) => {
+    setCustomLaundryTypes(customLaundryTypes.filter((t) => t !== type));
+    if (selectedLaundryType === type) {
+      setSelectedLaundryType(undefined);
+    }
+  };
+
+  const handleDeleteCustomPetType = (type: string) => {
+    setCustomPetTypes(customPetTypes.filter((t) => t !== type));
+    if (selectedPetType === type) {
+      setSelectedPetType(undefined);
+    }
+  };
+
+  const handleCategoryChange = (category: "cleaning" | "laundry" | "pet") => {
+    setSelectedCategory(category);
+    // 카테고리 변경 시 관련 상태들 초기화
+    setSelectedSpace("");
+    setSelectedLaundryType(undefined);
+    setSelectedPetType(undefined);
+    setSelectedFrequency({
+      type: undefined,
+      daysOfWeek: [],
+    });
+    setChecklistItems([]);
+    // 제목도 초기화 (기본 제목인 경우에만)
+    if (isDefaultTitle(title, category)) {
+      setTitle("");
+    }
   };
 
   const handleAddChecklistItem = () => {
@@ -143,6 +231,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       selectedCategory,
       selectedSpace,
       selectedLaundryType,
+      selectedPetType,
       selectedFrequency
     );
 
@@ -158,6 +247,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       space: selectedCategory === "cleaning" ? selectedSpace : undefined,
       laundryType:
         selectedCategory === "laundry" ? selectedLaundryType : undefined,
+      petType: selectedCategory === "pet" ? selectedPetType : undefined,
       frequency: selectedFrequency,
       isCompleted: false,
       checklistItems,
@@ -174,12 +264,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setSelectedCategory("cleaning");
     setSelectedSpace("");
     setSelectedLaundryType(undefined);
+    setSelectedPetType(undefined);
     setSelectedFrequency({
       type: undefined,
       daysOfWeek: [],
     });
-    setCustomSpace("");
-    setIsAddingCustomSpace(false);
+    setCustomSpaces([]);
+    setCustomLaundryTypes([]);
+    setCustomPetTypes([]);
     setChecklistItems([]);
     setNewChecklistItem("");
     setIsAddingChecklistItem(false);
@@ -203,6 +295,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       selectedCategory,
       selectedSpace,
       selectedLaundryType,
+      selectedPetType,
       selectedFrequency
     );
     return validation.isValid;
@@ -305,7 +398,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       },
                     ],
                   ]}
-                  onPress={() => setSelectedCategory("cleaning")}
+                  onPress={() => handleCategoryChange("cleaning")}
                 >
                   <Ionicons
                     name="brush"
@@ -344,7 +437,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       },
                     ],
                   ]}
-                  onPress={() => setSelectedCategory("laundry")}
+                  onPress={() => handleCategoryChange("laundry")}
                 >
                   <Ionicons
                     name="shirt"
@@ -366,6 +459,45 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     ]}
                   >
                     빨래
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.categoryButton,
+                    {
+                      borderColor: colors.onBackground + "20",
+                      backgroundColor: colors.surface,
+                    },
+                    selectedCategory === "pet" && [
+                      styles.categoryButtonSelected,
+                      {
+                        borderColor: colors.secondary,
+                        backgroundColor: colors.secondary,
+                      },
+                    ],
+                  ]}
+                  onPress={() => handleCategoryChange("pet")}
+                >
+                  <Ionicons
+                    name="paw"
+                    size={20}
+                    color={
+                      selectedCategory === "pet"
+                        ? colors.onPrimary
+                        : colors.secondary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.categoryButtonText,
+                      { color: colors.onBackground },
+                      selectedCategory === "pet" && [
+                        styles.categoryButtonTextSelected,
+                        { color: colors.onPrimary },
+                      ],
+                    ]}
+                  >
+                    반려동물
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -394,12 +526,16 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               />
             </View>
 
-            {/* 공간/빨래 타입 선택 */}
+            {/* 공간/빨래 타입/반려동물 타입 선택 */}
             <View style={styles.section}>
               <Text
                 style={[styles.sectionTitle, { color: colors.onBackground }]}
               >
-                {selectedCategory === "cleaning" ? "공간" : "빨래 타입"}
+                {selectedCategory === "cleaning"
+                  ? "공간"
+                  : selectedCategory === "laundry"
+                    ? "빨래 타입"
+                    : "반려동물 타입"}
               </Text>
 
               {selectedCategory === "cleaning" ? (
@@ -438,61 +574,59 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     </TouchableOpacity>
                   ))}
 
-                  {isAddingCustomSpace ? (
-                    <View style={styles.customInputContainer}>
-                      <TextInput
+                  {customSpaces.map((space) => (
+                    <View key={space} style={styles.customOptionContainer}>
+                      <TouchableOpacity
                         style={[
-                          styles.customInput,
+                          styles.optionButton,
                           {
                             borderColor: colors.onBackground + "30",
-                            color: colors.onBackground,
+                            backgroundColor: colors.surface,
                           },
+                          selectedSpace === space && [
+                            styles.optionButtonSelected,
+                            {
+                              borderColor: colors.primary,
+                              backgroundColor: colors.primary,
+                            },
+                          ],
                         ]}
-                        placeholder="공간 이름 입력"
-                        placeholderTextColor={colors.onBackground + "60"}
-                        value={customSpace}
-                        onChangeText={setCustomSpace}
-                        onSubmitEditing={handleAddCustomSpace}
-                        returnKeyType="done"
-                      />
+                        onPress={() => setSelectedSpace(space)}
+                      >
+                        <Text
+                          style={[
+                            styles.optionButtonText,
+                            { color: colors.onBackground },
+                            selectedSpace === space && [
+                              styles.optionButtonTextSelected,
+                              { color: colors.onPrimary },
+                            ],
+                          ]}
+                        >
+                          {space}
+                        </Text>
+                      </TouchableOpacity>
                       <TouchableOpacity
-                        onPress={handleAddCustomSpace}
-                        style={[
-                          styles.customInputButton,
-                          { backgroundColor: colors.primary + "20" },
-                        ]}
+                        style={styles.deleteCustomButton}
+                        onPress={() => handleDeleteCustomSpace(space)}
                       >
                         <Ionicons
-                          name="checkmark"
-                          size={20}
-                          color={colors.primary}
+                          name="close-circle"
+                          size={16}
+                          color={colors.error}
                         />
                       </TouchableOpacity>
                     </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={[
-                        styles.addCustomButton,
-                        {
-                          borderColor: colors.primary,
-                          backgroundColor: colors.primary + "10",
-                        },
-                      ]}
-                      onPress={() => setIsAddingCustomSpace(true)}
-                    >
-                      <Ionicons name="add" size={20} color={colors.primary} />
-                      <Text
-                        style={[
-                          styles.addCustomButtonText,
-                          { color: colors.primary },
-                        ]}
-                      >
-                        직접 입력
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                  ))}
+
+                  <CustomInputField
+                    placeholder="예: 서재, 다용도실, 베란다..."
+                    onAdd={handleAddCustomSpace}
+                    existingValues={[...SPACES, ...customSpaces]}
+                    errorMessage="이미 존재하는 공간입니다."
+                  />
                 </View>
-              ) : (
+              ) : selectedCategory === "laundry" ? (
                 <View style={styles.optionsContainer}>
                   {LAUNDRY_TYPES.map((type) => (
                     <TouchableOpacity
@@ -536,8 +670,163 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       </Text>
                     </TouchableOpacity>
                   ))}
+
+                  {customLaundryTypes.map((type) => (
+                    <View key={type} style={styles.customOptionContainer}>
+                      <TouchableOpacity
+                        style={[
+                          styles.optionButton,
+                          {
+                            borderColor: colors.onBackground + "30",
+                            backgroundColor: colors.surface,
+                          },
+                          selectedLaundryType === type && [
+                            styles.optionButtonSelected,
+                            {
+                              borderColor: colors.primary,
+                              backgroundColor: colors.primary,
+                            },
+                          ],
+                        ]}
+                        onPress={() => setSelectedLaundryType(type as any)}
+                      >
+                        <Text
+                          style={[
+                            styles.optionButtonText,
+                            { color: colors.onBackground },
+                            selectedLaundryType === type && [
+                              styles.optionButtonTextSelected,
+                              { color: colors.onPrimary },
+                            ],
+                          ]}
+                        >
+                          {type}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.deleteCustomButton}
+                        onPress={() => handleDeleteCustomLaundryType(type)}
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={16}
+                          color={colors.error}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+
+                  <CustomInputField
+                    placeholder="예: 운동복, 양말, 속옷..."
+                    onAdd={handleAddCustomLaundryType}
+                    existingValues={[
+                      ...LAUNDRY_TYPES.map((type) => type.label),
+                      ...customLaundryTypes,
+                    ]}
+                    errorMessage="이미 존재하는 빨래 타입입니다."
+                  />
                 </View>
-              )}
+              ) : selectedCategory === "pet" ? (
+                <View style={styles.optionsContainer}>
+                  {PET_TYPES.map((type) => (
+                    <TouchableOpacity
+                      key={type.value}
+                      style={[
+                        styles.optionButton,
+                        {
+                          borderColor: colors.onBackground + "30",
+                          backgroundColor: colors.surface,
+                        },
+                        selectedPetType === type.value && [
+                          styles.optionButtonSelected,
+                          {
+                            borderColor: colors.secondary,
+                            backgroundColor: colors.secondary,
+                          },
+                        ],
+                      ]}
+                      onPress={() =>
+                        setSelectedPetType(
+                          type.value as
+                            | "dog"
+                            | "cat"
+                            | "bird"
+                            | "fish"
+                            | "hamster"
+                        )
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.optionButtonText,
+                          { color: colors.onBackground },
+                          selectedPetType === type.value && [
+                            styles.optionButtonTextSelected,
+                            { color: colors.onPrimary },
+                          ],
+                        ]}
+                      >
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+
+                  {customPetTypes.map((type) => (
+                    <View key={type} style={styles.customOptionContainer}>
+                      <TouchableOpacity
+                        style={[
+                          styles.optionButton,
+                          {
+                            borderColor: colors.onBackground + "30",
+                            backgroundColor: colors.surface,
+                          },
+                          selectedPetType === type && [
+                            styles.optionButtonSelected,
+                            {
+                              borderColor: colors.secondary,
+                              backgroundColor: colors.secondary,
+                            },
+                          ],
+                        ]}
+                        onPress={() => setSelectedPetType(type as any)}
+                      >
+                        <Text
+                          style={[
+                            styles.optionButtonText,
+                            { color: colors.onBackground },
+                            selectedPetType === type && [
+                              styles.optionButtonTextSelected,
+                              { color: colors.onPrimary },
+                            ],
+                          ]}
+                        >
+                          {type}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.deleteCustomButton}
+                        onPress={() => handleDeleteCustomPetType(type)}
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={16}
+                          color={colors.error}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+
+                  <CustomInputField
+                    placeholder="예: 토끼, 거북이, 앵무새..."
+                    onAdd={handleAddCustomPetType}
+                    existingValues={[
+                      ...PET_TYPES.map((type) => type.label),
+                      ...customPetTypes,
+                    ]}
+                    errorMessage="이미 존재하는 반려동물 타입입니다."
+                  />
+                </View>
+              ) : null}
             </View>
 
             {/* 주기 선택 */}
@@ -648,36 +937,110 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 </View>
               )}
 
-              {/* 사용자 정의 일수 입력 */}
-              {selectedFrequency.type === "custom" && (
-                <View style={styles.customDaysContainer}>
+              {/* 월간 주기 선택 (monthly일 때) */}
+              {selectedFrequency.type === "monthly" && (
+                <View style={styles.monthlyContainer}>
                   <Text
                     style={[
-                      styles.customDaysTitle,
+                      styles.monthlyTitle,
                       { color: colors.onBackground },
                     ]}
                   >
-                    일수 입력
+                    주 선택
                   </Text>
-                  <TextInput
-                    style={[
-                      styles.customDaysInput,
-                      {
-                        borderColor: colors.onBackground + "30",
-                        color: colors.onBackground,
-                      },
-                    ]}
-                    placeholder="예: 3 (3일마다)"
-                    placeholderTextColor={colors.onBackground + "60"}
-                    keyboardType="numeric"
-                    value={selectedFrequency.customDays?.toString() || ""}
-                    onChangeText={(text) =>
-                      setSelectedFrequency({
-                        ...selectedFrequency,
-                        customDays: parseInt(text) || undefined,
-                      })
-                    }
-                  />
+                  <View style={styles.monthlyWeekGrid}>
+                    {MONTHLY_WEEKS.map((week) => (
+                      <TouchableOpacity
+                        key={week.value}
+                        style={[
+                          styles.monthlyWeekButton,
+                          {
+                            borderColor: colors.onBackground + "30",
+                            backgroundColor: colors.surface,
+                          },
+                          selectedFrequency.monthlyWeek === week.value && [
+                            styles.monthlyWeekButtonSelected,
+                            {
+                              borderColor: colors.primary,
+                              backgroundColor: colors.primary,
+                            },
+                          ],
+                        ]}
+                        onPress={() => {
+                          setSelectedFrequency({
+                            ...selectedFrequency,
+                            monthlyWeek: week.value,
+                          });
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.monthlyWeekButtonText,
+                            { color: colors.onBackground },
+                            selectedFrequency.monthlyWeek === week.value && [
+                              styles.monthlyWeekButtonTextSelected,
+                              { color: colors.onPrimary },
+                            ],
+                          ]}
+                        >
+                          {week.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  {selectedFrequency.monthlyWeek && (
+                    <View style={styles.monthlyDayContainer}>
+                      <Text
+                        style={[
+                          styles.monthlyDayTitle,
+                          { color: colors.onBackground },
+                        ]}
+                      >
+                        요일 선택
+                      </Text>
+                      <View style={styles.monthlyDayGrid}>
+                        {DAYS_OF_WEEK.map((day) => (
+                          <TouchableOpacity
+                            key={day.value}
+                            style={[
+                              styles.monthlyDayButton,
+                              {
+                                borderColor: colors.onBackground + "30",
+                                backgroundColor: colors.surface,
+                              },
+                              selectedFrequency.monthlyDay === day.value && [
+                                styles.monthlyDayButtonSelected,
+                                {
+                                  borderColor: colors.primary,
+                                  backgroundColor: colors.primary,
+                                },
+                              ],
+                            ]}
+                            onPress={() => {
+                              setSelectedFrequency({
+                                ...selectedFrequency,
+                                monthlyDay: day.value,
+                              });
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.monthlyDayButtonText,
+                                { color: colors.onBackground },
+                                selectedFrequency.monthlyDay === day.value && [
+                                  styles.monthlyDayButtonTextSelected,
+                                  { color: colors.onPrimary },
+                                ],
+                              ]}
+                            >
+                              {day.label}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                  )}
                 </View>
               )}
             </View>
@@ -873,7 +1236,7 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     flexDirection: "row",
-    gap: 12,
+    gap: 8,
   },
   categoryButton: {
     flex: 1,
@@ -921,35 +1284,29 @@ const styles = StyleSheet.create({
   optionButtonTextSelected: {
     fontWeight: "600",
   },
-  customInputContainer: {
-    flexDirection: "row",
+  customOptionContainer: {
+    position: "relative",
+  },
+  deleteCustomButton: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "white",
     alignItems: "center",
-    gap: 8,
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
   },
-  customInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 8,
-    ...TYPOGRAPHY.body2,
-  },
-  customInputButton: {
-    padding: 8,
-    borderRadius: 8,
-  },
-  addCustomButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  addCustomButtonText: {
-    ...TYPOGRAPHY.body2,
-    marginLeft: 4,
-    fontWeight: "500",
-  },
+
   daysContainer: {
     marginTop: 16,
   },
@@ -978,20 +1335,64 @@ const styles = StyleSheet.create({
   dayButtonTextSelected: {
     fontWeight: "600",
   },
-  customDaysContainer: {
+  monthlyContainer: {
     marginTop: 16,
   },
-  customDaysTitle: {
+  monthlyTitle: {
     ...TYPOGRAPHY.body2,
     marginBottom: 8,
     fontWeight: "500",
   },
-  customDaysInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    ...TYPOGRAPHY.body2,
+  monthlyWeekGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 16,
   },
+  monthlyWeekButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  monthlyWeekButtonSelected: {
+    // borderColor와 backgroundColor는 인라인으로 적용
+  },
+  monthlyWeekButtonText: {
+    ...TYPOGRAPHY.caption,
+  },
+  monthlyWeekButtonTextSelected: {
+    fontWeight: "600",
+  },
+  monthlyDayContainer: {
+    marginTop: 12,
+  },
+  monthlyDayTitle: {
+    ...TYPOGRAPHY.body2,
+    marginBottom: 8,
+    fontWeight: "500",
+  },
+  monthlyDayGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  monthlyDayButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  monthlyDayButtonSelected: {
+    // borderColor와 backgroundColor는 인라인으로 적용
+  },
+  monthlyDayButtonText: {
+    ...TYPOGRAPHY.caption,
+  },
+  monthlyDayButtonTextSelected: {
+    fontWeight: "600",
+  },
+
   checklistHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

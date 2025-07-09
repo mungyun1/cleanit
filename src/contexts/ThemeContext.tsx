@@ -36,7 +36,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       const settings = await StorageService.loadSettings();
       setIsDarkMode(settings.darkMode);
     } catch (error) {
-      console.error("테마 설정 로드 실패:", error);
+      // 테마 설정 로드 실패 시 기본값 사용
     }
   };
 
@@ -51,7 +51,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         darkMode: newDarkMode,
       });
     } catch (error) {
-      console.error("테마 설정 저장 실패:", error);
+      // 테마 설정 저장 실패 시 무시
     }
   };
 
@@ -65,7 +65,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         darkMode: enabled,
       });
     } catch (error) {
-      console.error("테마 설정 저장 실패:", error);
+      // 테마 설정 저장 실패 시 무시
     }
   };
 

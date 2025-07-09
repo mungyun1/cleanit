@@ -8,7 +8,6 @@ interface HeaderProps {
   subtitle?: string;
   showMenuButton?: boolean;
   showBackButton?: boolean;
-  onMenuPress?: () => void;
   onBackPress?: () => void;
   rightComponent?: React.ReactNode;
 }

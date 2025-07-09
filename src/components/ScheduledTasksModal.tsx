@@ -66,14 +66,14 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
   const handleStartTask = (task: ScheduledTask) => {
     Alert.alert("작업 시작", `"${task.title}" 작업을 시작하시겠습니까?`, [
       { text: "취소", style: "cancel" },
-      { text: "시작", onPress: () => console.log("작업 시작:", task.id) },
+      { text: "시작", onPress: () => {} },
     ]);
   };
 
   const handleCompleteTask = (task: ScheduledTask) => {
     Alert.alert("작업 완료", `"${task.title}" 작업을 완료하시겠습니까?`, [
       { text: "취소", style: "cancel" },
-      { text: "완료", onPress: () => console.log("작업 완료:", task.id) },
+      { text: "완료", onPress: () => {} },
     ]);
   };
 

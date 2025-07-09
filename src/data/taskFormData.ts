@@ -12,13 +12,21 @@ export const LAUNDRY_TYPES = [
   { label: "수건", value: "towels" as const },
 ];
 
+// 반려동물 타입 목록
+export const PET_TYPES = [
+  { label: "강아지", value: "dog" as const },
+  { label: "고양이", value: "cat" as const },
+  { label: "새", value: "bird" as const },
+  { label: "물고기", value: "fish" as const },
+  { label: "햄스터", value: "hamster" as const },
+];
+
 // 주기 목록
 export const FREQUENCIES = [
   { label: "매일", value: "daily" as const },
   { label: "매주", value: "weekly" as const },
   { label: "격주", value: "biweekly" as const },
   { label: "월 1회", value: "monthly" as const },
-  { label: "사용자 정의", value: "custom" as const },
 ];
 
 // 요일 목록
@@ -30,6 +38,15 @@ export const DAYS_OF_WEEK = [
   { label: "금요일", value: "friday" as DayOfWeek },
   { label: "토요일", value: "saturday" as DayOfWeek },
   { label: "일요일", value: "sunday" as DayOfWeek },
+];
+
+// 월간 주기 목록
+export const MONTHLY_WEEKS = [
+  { label: "첫째주", value: "first" as const },
+  { label: "둘째주", value: "second" as const },
+  { label: "셋째주", value: "third" as const },
+  { label: "넷째주", value: "fourth" as const },
+  { label: "마지막주", value: "last" as const },
 ];
 
 // 빨래 기본 체크리스트 템플릿
@@ -44,4 +61,27 @@ export const LAUNDRY_TEMPLATES = {
   ],
   bedding: ["침구 분리하기", "세탁 및 건조", "정리하기"],
   towels: ["수건 분류하기", "세탁 및 건조", "정리하기"],
+} as const;
+
+// 반려동물 기본 체크리스트 템플릿
+export const PET_TEMPLATES = {
+  dog: [
+    "산책하기",
+    "사료 주기",
+    "물 갈아주기",
+    "배변 처리하기",
+    "털 빗어주기",
+    "장난감 정리하기",
+  ],
+  cat: [
+    "사료 주기",
+    "물 갈아주기",
+    "모래통 정리하기",
+    "털 빗어주기",
+    "장난감 정리하기",
+  ],
+  bird: ["사료 주기", "물 갈아주기", "새장 청소하기", "장난감 정리하기"],
+  fish: ["사료 주기", "수질 확인하기", "필터 청소하기", "수조 청소하기"],
+  hamster: ["사료 주기", "물 갈아주기", "새장 청소하기", "장난감 정리하기"],
+  other: ["사료 주기", "물 갈아주기", "청소하기", "장난감 정리하기"],
 } as const;

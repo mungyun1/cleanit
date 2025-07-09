@@ -16,7 +16,6 @@ import {
 
 const CalendarScreen: React.FC = () => {
   const { colors, isDarkMode } = useTheme();
-  console.log("isDarkMode:", isDarkMode, "surface:", colors.surface);
   const [selectedDate, setSelectedDate] = useState("");
   const [markedDates, setMarkedDates] = useState<CalendarMarkedDates>({});
   const [modalVisible, setModalVisible] = useState(false);
@@ -97,7 +96,6 @@ const CalendarScreen: React.FC = () => {
           title="📅 캘린더"
           subtitle="청소 기록 및 계획"
           showMenuButton={true}
-          onMenuPress={() => console.log("메뉴 버튼 클릭")}
         />
         <View style={styles.calendarContainer}>
           <View style={styles.calendarWrapper}>

@@ -1,6 +1,6 @@
 import { ChecklistItem, FrequencySettings, DayOfWeek } from "../types";
 import { DEFAULT_CHECKLIST_TEMPLATES } from "../constants";
-import { LAUNDRY_TEMPLATES } from "../data/taskFormData";
+import { LAUNDRY_TEMPLATES, PET_TEMPLATES } from "../data/taskFormData";
 
 // 체크리스트 아이템 생성 함수
 export const createChecklistItem = (title: string): ChecklistItem => ({
@@ -44,17 +44,28 @@ export const getLaundryChecklistTemplate = (
   return createChecklistFromTemplate([...templateItems]);
 };
 
+// 반려동물 작업용 체크리스트 템플릿 가져오기
+export const getPetChecklistTemplate = (petType: string): ChecklistItem[] => {
+  const templateItems =
+    PET_TEMPLATES[petType as keyof typeof PET_TEMPLATES] || [];
+  return createChecklistFromTemplate([...templateItems]);
+};
+
 // 제목 자동 완성 함수
 export const generateAutoTitle = (
-  category: "cleaning" | "laundry",
+  category: "cleaning" | "laundry" | "pet",
   space?: string,
   laundryType?: string,
-  laundryTypeLabel?: string
+  laundryTypeLabel?: string,
+  petType?: string,
+  petTypeLabel?: string
 ): string => {
   if (category === "cleaning" && space) {
     return `${space} 청소`;
   } else if (category === "laundry" && laundryTypeLabel) {
     return `${laundryTypeLabel} 빨래`;
+  } else if (category === "pet" && petTypeLabel) {
+    return `${petTypeLabel} 케어`;
   }
   return "";
 };
@@ -62,20 +73,14 @@ export const generateAutoTitle = (
 // 기존 제목이 기본 제목인지 확인하는 함수
 export const isDefaultTitle = (
   title: string,
-  category: "cleaning" | "laundry"
+  category: "cleaning" | "laundry" | "pet"
 ): boolean => {
   if (category === "cleaning") {
-    return (
-      !title ||
-      title === "" ||
-      !!title.match(/^(거실|주방|방|욕실|공용)\s*청소$/)
-    );
+    return !title || title === "" || !!title.match(/^.*\s*청소$/);
   } else if (category === "laundry") {
-    return (
-      !title ||
-      title === "" ||
-      !!title.match(/^(흰 옷|색 옷|섬세한 옷|침구|수건)\s*빨래$/)
-    );
+    return !title || title === "" || !!title.match(/^.*\s*빨래$/);
+  } else if (category === "pet") {
+    return !title || title === "" || !!title.match(/^.*\s*케어$/);
   }
   return false;
 };
@@ -93,9 +98,10 @@ export const toggleDayOfWeek = (
 // 폼 유효성 검사 함수
 export const validateTaskForm = (
   title: string,
-  category: "cleaning" | "laundry",
+  category: "cleaning" | "laundry" | "pet",
   space: string,
   laundryType: string | undefined,
+  petType: string | undefined,
   frequency: FrequencySettings
 ): { isValid: boolean; errorMessage?: string } => {
   if (!title.trim()) {
@@ -110,8 +116,22 @@ export const validateTaskForm = (
     return { isValid: false, errorMessage: "빨래 타입을 선택해주세요." };
   }
 
+  if (category === "pet" && !petType) {
+    return { isValid: false, errorMessage: "반려동물 타입을 선택해주세요." };
+  }
+
   if (!frequency.type) {
     return { isValid: false, errorMessage: "주기를 선택해주세요." };
+  }
+
+  // 월간 주기일 때 몇째주와 요일 선택 검증
+  if (frequency.type === "monthly") {
+    if (!frequency.monthlyWeek) {
+      return { isValid: false, errorMessage: "몇째주를 선택해주세요." };
+    }
+    if (!frequency.monthlyDay) {
+      return { isValid: false, errorMessage: "요일을 선택해주세요." };
+    }
   }
 
   return { isValid: true };

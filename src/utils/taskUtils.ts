@@ -54,6 +54,11 @@ export const getLaundryTypeText = (laundryType: string) => {
 };
 
 export const getFrequencyText = (frequency: any) => {
+  // frequency가 undefined이거나 null인 경우 처리
+  if (!frequency) {
+    return "알 수 없음";
+  }
+
   const dayNames: Record<DayOfWeek, string> = {
     monday: "월요일",
     tuesday: "화요일",
