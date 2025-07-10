@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,10 +14,18 @@ import Header from "../components/Header";
 import AddTaskModal from "../components/AddTaskModal";
 import SectionHeader from "../components/SectionHeader";
 import { HouseholdTask } from "../types";
+import { UNIFIED_TASKS, convertToScheduledTask } from "../data/unifiedData";
+import { useTaskContext } from "../contexts/TaskContext";
 
 const HomeScreen: React.FC = () => {
   const { colors } = useTheme();
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const {
+    unifiedTasks,
+    setUnifiedTasks,
+    scheduledTasksData,
+    setScheduledTasksData,
+  } = useTaskContext();
   // 오늘 날짜 포맷팅
   const getTodayDate = () => {
     const today = new Date();
@@ -40,163 +48,100 @@ const HomeScreen: React.FC = () => {
 
   const todayInfo = getTodayDate();
 
-  const handleToggleTask = (taskId: string) => {
-    setTodayTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              isCompleted: !task.isCompleted,
-              lastCompleted: !task.isCompleted ? new Date() : undefined,
-              updatedAt: new Date(),
-            }
-          : task
-      )
-    );
-  };
+  // 오늘 날짜에 해당하는 작업 필터링
+  const todayTasks = useMemo(() => {
+    const today = new Date();
+    const todayString = today.toISOString().split("T")[0]; // YYYY-MM-DD 형식
+
+    // unifiedTasks에서 오늘 날짜에 해당하는 작업만 필터링
+    const filteredTasks = unifiedTasks.filter((task) => {
+      // daily 작업은 항상 포함
+      if (task.frequency.type === "daily") return true;
+
+      // weekly 작업은 오늘이 해당 요일인지 확인
+      if (task.frequency.type === "weekly" && task.frequency.daysOfWeek) {
+        const dayNames = [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+        ];
+        const todayDayName = dayNames[today.getDay()];
+        return task.frequency.daysOfWeek.includes(todayDayName as any);
+      }
+
+      // biweekly 작업은 간단히 매주 포함 (실제로는 더 복잡한 로직 필요)
+      if (task.frequency.type === "biweekly") {
+        const dayNames = [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+        ];
+        const todayDayName = dayNames[today.getDay()];
+        return task.frequency.daysOfWeek?.includes(todayDayName as any);
+      }
+
+      return false;
+    });
+
+    return filteredTasks;
+  }, [unifiedTasks]);
+
+  const handleToggleTask = useCallback(
+    (taskId: string) => {
+      setUnifiedTasks((prevTasks) => {
+        const updatedTasks = prevTasks.map((task) =>
+          task.id === taskId
+            ? { ...task, isCompleted: !task.isCompleted, updatedAt: new Date() }
+            : task
+        );
+        return updatedTasks;
+      });
+    },
+    [setUnifiedTasks]
+  );
 
   const handleEditTask = (taskId: string) => {
     // navigation.navigate("EditTask", { taskId });
   };
 
   const handleUpdateTask = (updatedTask: HouseholdTask) => {
-    setTodayTasks((prevTasks) =>
-      prevTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
-    );
+    setUnifiedTasks((prevTasks) => {
+      const updatedTasks = prevTasks.map((task) =>
+        task.id === updatedTask.id ? updatedTask : task
+      );
+      return updatedTasks;
+    });
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setTodayTasks((prevTasks) =>
+    setUnifiedTasks((prevTasks) =>
       prevTasks.filter((task) => task.id !== taskId)
     );
+    setScheduledTasksData((prev) => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach((date) => {
+        updated[date] = updated[date].filter((task) => task.id !== taskId);
+        if (updated[date].length === 0) delete updated[date];
+      });
+      return updated;
+    });
   };
 
   const handleAddTask = (newTask: HouseholdTask) => {
-    setTodayTasks((prevTasks) => [...prevTasks, newTask]);
+    setUnifiedTasks((prevTasks) => [...prevTasks, newTask]);
     setIsAddModalVisible(false);
   };
 
-  // 임시 데이터 (청소 + 빨래)
-  const [todayTasks, setTodayTasks] = useState<HouseholdTask[]>([
-    {
-      id: "1",
-      title: "거실 청소",
-      description: "바닥 쓸기, 먼지 털기",
-      category: "cleaning",
-      space: "거실",
-      frequency: { type: "daily" },
-      isCompleted: false,
-      checklistItems: [
-        {
-          id: "1-1",
-          title: "바닥 쓸기",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "1-2",
-          title: "먼지 털기",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "2",
-      title: "주방 정리",
-      description: "설거지, 주방 정리",
-      category: "cleaning",
-      space: "주방",
-      frequency: { type: "daily" },
-      isCompleted: true,
-      checklistItems: [
-        {
-          id: "2-1",
-          title: "설거지",
-          isCompleted: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "2-2",
-          title: "주방 카운터 정리",
-          isCompleted: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "3",
-      title: "흰 옷 빨래",
-      description: "흰색 옷들 세탁하기",
-      category: "laundry",
-      laundryType: "whites",
-      frequency: { type: "weekly" },
-      isCompleted: false,
-      checklistItems: [
-        {
-          id: "3-1",
-          title: "흰 옷 분류하기",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "3-2",
-          title: "세제 넣고 세탁",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "3-3",
-          title: "건조기 돌리기",
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "4",
-      title: "침구 세탁",
-      description: "침대 시트, 이불 세탁",
-      category: "laundry",
-      laundryType: "bedding",
-      frequency: { type: "biweekly" },
-      isCompleted: true,
-      checklistItems: [
-        {
-          id: "4-1",
-          title: "침구 분리하기",
-          isCompleted: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "4-2",
-          title: "세탁 및 건조",
-          isCompleted: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ]);
-
   // 통계 계산
-  const getStats = () => {
+  const stats = useMemo(() => {
     const totalTasks = todayTasks.length;
     const completedTasks = todayTasks.filter((task) => task.isCompleted).length;
     const remainingTasks = totalTasks - completedTasks;
@@ -214,9 +159,7 @@ const HomeScreen: React.FC = () => {
       cleaning: cleaningTasks,
       laundry: laundryTasks,
     };
-  };
-
-  const stats = getStats();
+  }, [todayTasks]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -230,7 +173,6 @@ const HomeScreen: React.FC = () => {
           subtitle="오늘 할 청소와 빨래를 확인하세요"
         />
 
-        {/* 오늘 날짜 표시 */}
         <View style={styles.dateContainer}>
           <View
             style={[
@@ -411,7 +353,7 @@ const HomeScreen: React.FC = () => {
               <CleaningTaskItem
                 key={task.id}
                 task={task}
-                onToggle={() => handleToggleTask(task.id)}
+                onToggle={handleToggleTask}
                 onEdit={handleEditTask}
                 onUpdateTask={handleUpdateTask}
                 onDeleteTask={handleDeleteTask}

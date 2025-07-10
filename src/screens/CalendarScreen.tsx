@@ -7,12 +7,16 @@ import Header from "../components/Header";
 import ScheduledTasksModal from "../components/ScheduledTasksModal";
 import {
   CALENDAR_MOCK_DATA,
-  MONTHLY_STATS_MOCK,
+  MONTHLY_STATS,
   LEGEND_DATA,
   CalendarMarkedDates,
-  SCHEDULED_TASKS_DATA,
+  SCHEDULED_TASKS_DATA as initialScheduledTasksData,
   ScheduledTask,
-} from "../data/mockData";
+  UNIFIED_TASKS as initialUnifiedTasks,
+} from "../data/unifiedData";
+import { getLegendColor } from "../utils/taskUtils";
+import { COMPLETED_TASKS_MOCK_DATA } from "../data/calendarMockData";
+import { useTaskContext } from "../contexts/TaskContext";
 
 const CalendarScreen: React.FC = () => {
   const { colors, isDarkMode } = useTheme();
@@ -22,6 +26,12 @@ const CalendarScreen: React.FC = () => {
   const [selectedDateTasks, setSelectedDateTasks] = useState<ScheduledTask[]>(
     []
   );
+  const {
+    unifiedTasks,
+    setUnifiedTasks,
+    scheduledTasksData,
+    setScheduledTasksData,
+  } = useTaskContext();
 
   // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
   const getTodayString = () => {
@@ -32,39 +42,176 @@ const CalendarScreen: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
+  // 작업 삭제 함수
+  const deleteTask = (taskId: string) => {
+    setUnifiedTasks((prev) => prev.filter((task) => task.id !== taskId));
+    setScheduledTasksData((prev) => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach((date) => {
+        updated[date] = updated[date].filter((task) => task.id !== taskId);
+        if (updated[date].length === 0) delete updated[date];
+      });
+      return updated;
+    });
+  };
+
   useEffect(() => {
-    // SCHEDULED_TASKS_DATA를 기반으로 캘린더 마킹 데이터 생성
+    // 완료된 작업들과 오늘 예정된 작업들을 캘린더 마킹 데이터 생성
     const generateMarkedDates = () => {
       const marked: CalendarMarkedDates = {};
       const today = getTodayString();
 
-      Object.keys(SCHEDULED_TASKS_DATA).forEach((date) => {
-        const tasks = SCHEDULED_TASKS_DATA[date];
-        if (tasks && tasks.length > 0) {
-          // 해당 날짜의 첫 번째 작업 색상을 사용
-          marked[date] = {
+      // LEGEND_DATA에서 공간명(label)로 색상 찾기
+      const getLegendColor = (spaceOrLabel: string) => {
+        const found = LEGEND_DATA.find((item) => item.label === spaceOrLabel);
+        return found ? found.color : colors.primary;
+      };
+
+      // 실제 완료된 작업들과 목데이터를 합침
+      const allCompletedTasks = [
+        ...unifiedTasks.filter((task) => task.isCompleted),
+        ...COMPLETED_TASKS_MOCK_DATA,
+      ];
+
+      // 완료된 작업들의 날짜를 마킹
+      allCompletedTasks.forEach((task) => {
+        if (task.lastCompleted) {
+          const completedDate = new Date(task.lastCompleted);
+          const dateString = completedDate.toISOString().split("T")[0];
+
+          // 과거부터 오늘까지만 표시
+          if (dateString <= today) {
+            const taskColor = getLegendColor(
+              task.space || (task.category === "laundry" ? "빨래" : "기타")
+            );
+
+            // 같은 날짜에 여러 작업이 있는 경우 기존 스타일 유지하면서 추가
+            if (marked[dateString]) {
+              // 기존 마킹이 있으면 dotColor만 업데이트 (첫 번째 작업의 색상 유지)
+              marked[dateString] = {
+                ...marked[dateString],
+                marked: true,
+              };
+            } else {
+              marked[dateString] = {
+                marked: true,
+                dotColor: taskColor,
+                textColor: colors.onBackground,
+                customStyles: {
+                  container: {
+                    backgroundColor: taskColor + "20", // 20% 투명도
+                    borderRadius: 20,
+                    width: 36,
+                    height: 36,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  },
+                  text: {
+                    color: colors.onBackground,
+                    fontWeight: "600",
+                  },
+                },
+              };
+            }
+          }
+        }
+      });
+
+      // 오늘 예정된 작업들 마킹 (HomeScreen과 동일한 로직)
+      const todayDate = new Date();
+      const todayTasks = unifiedTasks.filter((task) => {
+        // daily 작업은 항상 포함
+        if (task.frequency.type === "daily") return true;
+
+        // weekly 작업은 오늘이 해당 요일인지 확인
+        if (task.frequency.type === "weekly" && task.frequency.daysOfWeek) {
+          const dayNames = [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+          ];
+          const todayDayName = dayNames[todayDate.getDay()];
+          return task.frequency.daysOfWeek.includes(todayDayName as any);
+        }
+
+        // biweekly 작업은 간단히 매주 포함
+        if (task.frequency.type === "biweekly") {
+          const dayNames = [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+          ];
+          const todayDayName = dayNames[todayDate.getDay()];
+          return task.frequency.daysOfWeek?.includes(todayDayName as any);
+        }
+
+        return false;
+      });
+
+      // 오늘 예정된 작업이 있으면 오늘 날짜에 특별한 마킹 추가
+      if (todayTasks.length > 0) {
+        const todayColor = colors.secondary; // 오늘 예정된 작업은 다른 색상 사용
+
+        if (marked[today]) {
+          // 완료된 작업과 예정된 작업이 모두 있는 경우
+          marked[today] = {
+            ...marked[today],
             marked: true,
-            dotColor: tasks[0].color,
-            textColor: colors.onBackground,
+            // 완료된 작업과 예정된 작업을 구분하기 위해 다른 스타일 적용
             customStyles: {
               container: {
-                backgroundColor: tasks[0].color + "20", // 20% 투명도
+                backgroundColor: todayColor + "30", // 30% 투명도
                 borderRadius: 20,
                 width: 36,
                 height: 36,
                 justifyContent: "center",
                 alignItems: "center",
+                borderWidth: 2,
+                borderColor: todayColor,
               },
               text: {
                 color: colors.onBackground,
-                fontWeight: "600",
+                fontWeight: "bold",
+                fontSize: 16,
+              },
+            },
+          };
+        } else {
+          // 오늘 예정된 작업만 있는 경우
+          marked[today] = {
+            marked: true,
+            dotColor: todayColor,
+            textColor: colors.onBackground,
+            customStyles: {
+              container: {
+                backgroundColor: todayColor + "30", // 30% 투명도
+                borderRadius: 20,
+                width: 36,
+                height: 36,
+                justifyContent: "center",
+                alignItems: "center",
+                borderWidth: 2,
+                borderColor: todayColor,
+              },
+              text: {
+                color: colors.onBackground,
+                fontWeight: "bold",
+                fontSize: 16,
               },
             },
           };
         }
-      });
+      }
 
-      // 오늘 날짜 스타일 추가
+      // 오늘 날짜 스타일 추가 (완료된 작업이 있든 없든)
       marked[today] = {
         ...marked[today],
         customStyles: {
@@ -90,17 +237,118 @@ const CalendarScreen: React.FC = () => {
     };
 
     setMarkedDates(generateMarkedDates());
-  }, [colors.onBackground, colors.primary, isDarkMode]);
+  }, [
+    colors.onBackground,
+    colors.primary,
+    colors.secondary,
+    isDarkMode,
+    unifiedTasks,
+  ]);
 
   const onDayPress = (day: DateData) => {
-    const tasks = SCHEDULED_TASKS_DATA[day.dateString] || [];
-    // 일정이 없는 날짜는 클릭하지 않음
-    if (tasks.length === 0) {
+    const today = getTodayString();
+    const isToday = day.dateString === today;
+
+    let tasksForDate: any[] = [];
+
+    if (isToday) {
+      // 오늘인 경우: 완료된 작업 + 예정된 작업 모두 표시
+      const allCompletedTasks = [
+        ...unifiedTasks.filter((task) => task.isCompleted),
+        ...COMPLETED_TASKS_MOCK_DATA,
+      ];
+
+      const completedTasksForToday = allCompletedTasks.filter((task) => {
+        if (!task.lastCompleted) return false;
+
+        const completedDate = new Date(task.lastCompleted);
+        const completedDateString = completedDate.toISOString().split("T")[0];
+
+        return completedDateString === day.dateString;
+      });
+
+      // 오늘 예정된 작업들 (HomeScreen과 동일한 로직)
+      const todayDate = new Date();
+      const todayTasks = unifiedTasks.filter((task) => {
+        // daily 작업은 항상 포함
+        if (task.frequency.type === "daily") return true;
+
+        // weekly 작업은 오늘이 해당 요일인지 확인
+        if (task.frequency.type === "weekly" && task.frequency.daysOfWeek) {
+          const dayNames = [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+          ];
+          const todayDayName = dayNames[todayDate.getDay()];
+          return task.frequency.daysOfWeek.includes(todayDayName as any);
+        }
+
+        // biweekly 작업은 간단히 매주 포함
+        if (task.frequency.type === "biweekly") {
+          const dayNames = [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+          ];
+          const todayDayName = dayNames[todayDate.getDay()];
+          return task.frequency.daysOfWeek?.includes(todayDayName as any);
+        }
+
+        return false;
+      });
+
+      tasksForDate = [...completedTasksForToday, ...todayTasks];
+    } else {
+      // 과거 날짜인 경우: 완료된 작업만 표시
+      const allCompletedTasks = [
+        ...unifiedTasks.filter((task) => task.isCompleted),
+        ...COMPLETED_TASKS_MOCK_DATA,
+      ];
+
+      const completedTasksForDate = allCompletedTasks.filter((task) => {
+        if (!task.lastCompleted) return false;
+
+        const completedDate = new Date(task.lastCompleted);
+        const completedDateString = completedDate.toISOString().split("T")[0];
+
+        return completedDateString === day.dateString;
+      });
+
+      tasksForDate = completedTasksForDate;
+    }
+
+    // 작업이 없는 날짜는 클릭하지 않음
+    if (tasksForDate.length === 0) {
       return;
     }
 
+    // 작업들을 ScheduledTask 형식으로 변환
+    const convertedTasks: ScheduledTask[] = tasksForDate.map((task) => ({
+      id: task.id,
+      title: task.title,
+      description: task.description || "",
+      area: task.category === "cleaning" ? task.space || "기타" : "빨래",
+      priority: "medium",
+      estimatedTime: 30,
+      color: task.category === "cleaning" ? colors.primary : colors.secondary,
+      severity: "normal",
+      isCompleted: task.isCompleted,
+      category: task.category,
+      frequency: task.frequency,
+      label: (task as any).label || "",
+    }));
+
     setSelectedDate(day.dateString);
-    setSelectedDateTasks(tasks);
+    setSelectedDateTasks(convertedTasks);
     setModalVisible(true);
   };
 
@@ -133,35 +381,6 @@ const CalendarScreen: React.FC = () => {
     textDayHeaderFontSize: 14,
   });
 
-  const renderLegend = () => (
-    <View style={styles.legendContainer}>
-      <Text style={[styles.legendTitle, { color: colors.onBackground + "80" }]}>
-        범례
-      </Text>
-      <View style={styles.legendItems}>
-        {LEGEND_DATA.map((item, index) => (
-          <View key={index} style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendDot,
-                {
-                  backgroundColor: item.color + "20",
-                  borderWidth: 1,
-                  borderColor: item.color,
-                },
-              ]}
-            />
-            <Text
-              style={[styles.legendText, { color: colors.onBackground + "80" }]}
-            >
-              {item.label}
-            </Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
@@ -171,7 +390,7 @@ const CalendarScreen: React.FC = () => {
       >
         <Header
           title="📅 캘린더"
-          subtitle="청소 기록 및 계획"
+          subtitle="완료된 작업 기록을 확인하세요"
           showMenuButton={true}
         />
         <View style={styles.calendarContainer}>
@@ -181,16 +400,15 @@ const CalendarScreen: React.FC = () => {
               onDayPress={onDayPress}
               markedDates={markedDates}
               theme={getTheme()}
-              enableSwipeMonths={true}
+              enableSwipeMonths={false}
               showWeekNumbers={false}
               firstDay={1}
               hideExtraDays={true}
-              disableMonthChange={false}
+              disableMonthChange={true}
               hideDayNames={false}
               markingType="custom"
             />
           </View>
-          {renderLegend()}
         </View>
 
         <View style={styles.statsContainer}>
@@ -208,7 +426,7 @@ const CalendarScreen: React.FC = () => {
               ]}
             >
               <Text style={[styles.statNumber, { color: colors.primary }]}>
-                {MONTHLY_STATS_MOCK.completedTasks}
+                {MONTHLY_STATS.completedTasks}
               </Text>
               <Text
                 style={[
@@ -229,7 +447,7 @@ const CalendarScreen: React.FC = () => {
               ]}
             >
               <Text style={[styles.statNumber, { color: colors.primary }]}>
-                {MONTHLY_STATS_MOCK.incompleteTasks}
+                {MONTHLY_STATS.incompleteTasks}
               </Text>
               <Text
                 style={[
@@ -250,7 +468,7 @@ const CalendarScreen: React.FC = () => {
               ]}
             >
               <Text style={[styles.statNumber, { color: colors.primary }]}>
-                {MONTHLY_STATS_MOCK.completionRate}
+                {MONTHLY_STATS.completionRate}
               </Text>
               <Text
                 style={[
@@ -271,7 +489,7 @@ const CalendarScreen: React.FC = () => {
               ]}
             >
               <Text style={[styles.statNumber, { color: colors.primary }]}>
-                {MONTHLY_STATS_MOCK.consecutiveDays}
+                {MONTHLY_STATS.consecutiveDays}
               </Text>
               <Text
                 style={[

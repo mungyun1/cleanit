@@ -15,35 +15,74 @@ import AddTaskModal from "../components/AddTaskModal";
 import SectionHeader from "../components/SectionHeader";
 import { HouseholdTask } from "../types";
 import { useNavigation } from "@react-navigation/native";
-import { useTaskManagement } from "../hooks/useTaskManagement";
-import {
-  FILTER_OPTIONS,
-  SPACES_FOR_FILTER,
-  STAT_CARDS,
-} from "../data/taskManagementData";
+import { useTaskContext } from "../contexts/TaskContext";
+import { FILTER_OPTIONS, SPACES, STAT_CARDS } from "../data/unifiedData";
 
 const TaskManagementScreen: React.FC = () => {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<string>(
+    FILTER_OPTIONS.ALL
+  );
 
   const {
-    tasks,
-    stats,
-    selectedFilter,
-    handleToggleTask,
-    handleUpdateTask,
-    handleDeleteTask,
-    handleAddTask,
-    handleFilterChange,
-  } = useTaskManagement();
+    unifiedTasks,
+    setUnifiedTasks,
+    scheduledTasksData,
+    setScheduledTasksData,
+  } = useTaskContext();
+
+  // 필터링된 작업 목록
+  const filteredTasks = unifiedTasks.filter((task) => {
+    if (selectedFilter === FILTER_OPTIONS.ALL) return true;
+    if (selectedFilter === FILTER_OPTIONS.CLEANING)
+      return task.category === "cleaning";
+    if (selectedFilter === FILTER_OPTIONS.LAUNDRY)
+      return task.category === "laundry";
+    return true;
+  });
+
+  // 통계 계산
+  const stats = {
+    totalTasks: unifiedTasks.length,
+    completedTasks: unifiedTasks.filter((t) => t.isCompleted).length,
+  };
+
+  const handleFilterChange = (filter: string) => setSelectedFilter(filter);
+
+  const handleToggleTask = (taskId: string) => {
+    setUnifiedTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
+      )
+    );
+  };
+
+  const handleUpdateTask = (updatedTask: HouseholdTask) => {
+    setUnifiedTasks((prev) =>
+      prev.map((task) => (task.id === updatedTask.id ? updatedTask : task))
+    );
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setUnifiedTasks((prev) => prev.filter((task) => task.id !== taskId));
+    setScheduledTasksData((prev) => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach((date) => {
+        updated[date] = updated[date].filter((task) => task.id !== taskId);
+        if (updated[date].length === 0) delete updated[date];
+      });
+      return updated;
+    });
+  };
 
   const handleEditTask = (taskId: string) => {
     // navigation.navigate("EditTask", { taskId });
   };
 
   const handleAddTaskAndClose = (newTask: HouseholdTask) => {
-    handleAddTask(newTask);
+    setUnifiedTasks((prevTasks) => [...prevTasks, newTask]);
     setIsAddModalVisible(false);
   };
 
@@ -188,8 +227,8 @@ const TaskManagementScreen: React.FC = () => {
             onAddPress={() => setIsAddModalVisible(true)}
           />
 
-          {tasks.length > 0 ? (
-            tasks.map((task) => (
+          {filteredTasks.length > 0 ? (
+            filteredTasks.map((task) => (
               <CleaningTaskItem
                 key={task.id}
                 task={task}
@@ -340,12 +379,10 @@ const styles = StyleSheet.create({
   emptyStateButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: undefined,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: undefined,
     marginTop: 16,
   },
   emptyStateButtonText: {

@@ -5,11 +5,12 @@ import { HouseholdTask, FrequencySettings } from "../types";
 import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
 import TaskDetailModal from "./TaskDetailModal";
+import { getLegendColor } from "../utils/taskUtils";
 
 interface CleaningTaskItemProps {
   task: HouseholdTask;
   onPress?: () => void;
-  onToggle?: () => void;
+  onToggle?: (taskId: string) => void;
   onEdit?: (taskId: string) => void;
   onUpdateTask?: (updatedTask: HouseholdTask) => void;
   onDeleteTask?: (taskId: string) => void;
@@ -118,6 +119,19 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
     }
   };
 
+  const getLabelColor = (label: string) => {
+    switch (label) {
+      case "청소":
+        return colors.primary + "20"; // 연한 primary 색상
+      case "빨래":
+        return colors.secondary + "20"; // 연한 secondary 색상
+      case "반려동물":
+        return "#E8F5E8"; // 연한 초록색
+      default:
+        return colors.common + "20";
+    }
+  };
+
   const getCategoryIcon = () => {
     if (task.category === "laundry") {
       return <Ionicons name="shirt" size={16} color={colors.secondary} />;
@@ -131,7 +145,9 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
   };
 
   const handleToggleComplete = () => {
-    if (onToggle) onToggle();
+    if (onToggle) {
+      onToggle(task.id);
+    }
   };
 
   const handleEdit = () => {
@@ -172,17 +188,18 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
                 style={[
                   styles.tag,
                   {
-                    backgroundColor:
-                      task.category === "cleaning"
-                        ? getSpaceColor(task.space || "")
-                        : getLaundryTypeColor(task.laundryType || ""),
+                    backgroundColor: getLegendColor(
+                      task.space ||
+                        (task.category === "laundry" ? "빨래" : "기타")
+                    ),
                   },
                 ]}
               >
                 <Text style={[styles.tagText, { color: colors.onBackground }]}>
-                  {task.category === "cleaning"
-                    ? task.space
-                    : getLaundryTypeText(task.laundryType || "")}
+                  {task.label ||
+                    (task.category === "cleaning"
+                      ? task.space
+                      : getLaundryTypeText(task.laundryType || ""))}
                 </Text>
               </View>
             </View>
@@ -227,7 +244,6 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
         task={task}
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
-        onToggleComplete={handleToggleComplete}
         onEdit={handleEdit}
         onUpdateTask={onUpdateTask}
         onDeleteTask={onDeleteTask}

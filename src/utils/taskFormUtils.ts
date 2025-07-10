@@ -1,6 +1,9 @@
 import { ChecklistItem, FrequencySettings, DayOfWeek } from "../types";
-import { DEFAULT_CHECKLIST_TEMPLATES } from "../constants";
-import { LAUNDRY_TEMPLATES, PET_TEMPLATES } from "../data/taskFormData";
+import {
+  CLEANING_TEMPLATES,
+  LAUNDRY_TEMPLATES,
+  PET_TEMPLATES,
+} from "../data/unifiedData";
 
 // 체크리스트 아이템 생성 함수
 export const createChecklistItem = (title: string): ChecklistItem => ({
@@ -29,10 +32,8 @@ export const getCleaningChecklistTemplate = (
   space: string
 ): ChecklistItem[] => {
   const templateItems =
-    DEFAULT_CHECKLIST_TEMPLATES[
-      space as keyof typeof DEFAULT_CHECKLIST_TEMPLATES
-    ];
-  return templateItems ? createChecklistFromTemplate(templateItems) : [];
+    CLEANING_TEMPLATES[space as keyof typeof CLEANING_TEMPLATES];
+  return templateItems ? createChecklistFromTemplate([...templateItems]) : [];
 };
 
 // 빨래 작업용 체크리스트 템플릿 가져오기

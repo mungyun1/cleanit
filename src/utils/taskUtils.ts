@@ -1,5 +1,6 @@
 import { COLORS } from "../constants";
 import { DayOfWeek } from "../types";
+import { LEGEND_DATA } from "../data/unifiedData";
 
 export const getSpaceColor = (space: string, colors?: any) => {
   const colorPalette = colors || COLORS;
@@ -98,3 +99,8 @@ export const getFrequencyText = (frequency: any) => {
       return "알 수 없음";
   }
 };
+
+export function getLegendColor(label: string) {
+  const found = LEGEND_DATA.find((item) => item.label === label);
+  return found ? found.color : "#BDBDBD";
+}

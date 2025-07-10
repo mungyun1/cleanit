@@ -17,6 +17,7 @@ import EditTaskScreen from "./src/screens/EditTaskScreen";
 // 타입
 import { RootStackParamList } from "./src/types";
 import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
+import { TaskProvider } from "./src/contexts/TaskContext";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<RootStackParamList>();
@@ -129,8 +130,10 @@ function AppContent() {
 // 메인 앱
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <TaskProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </TaskProvider>
   );
 }

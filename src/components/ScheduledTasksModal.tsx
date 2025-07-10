@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
 } from "react-native";
 import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
-import { ScheduledTask } from "../data/mockData";
+import { ScheduledTask } from "../data/unifiedData";
+import { Ionicons } from "@expo/vector-icons";
 
 interface ScheduledTasksModalProps {
   visible: boolean;
@@ -21,6 +22,8 @@ interface ScheduledTasksModalProps {
 }
 
 const { width: screenWidth } = Dimensions.get("window");
+const CARD_WIDTH = screenWidth * 0.9;
+const SIDE_PADDING = (screenWidth - CARD_WIDTH) / 2;
 
 const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
   visible,
@@ -85,10 +88,10 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
           backgroundColor: colors.surface,
           shadowColor: colors.onBackground,
           borderColor: colors.surface + "20",
+          opacity: item.isCompleted ? 0.5 : 1, // 완료된 작업은 흐리게
         },
       ]}
     >
-      {/* 헤더 섹션 */}
       <View style={styles.taskHeader}>
         <View style={styles.taskTitleContainer}>
           <View
@@ -108,22 +111,29 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
             {item.title}
           </Text>
         </View>
-        <View
-          style={[
-            styles.priorityBadge,
-            {
-              backgroundColor: getPriorityColor(item.priority),
-              shadowColor: colors.onBackground,
-            },
-          ]}
-        >
-          <Text style={styles.priorityText}>
-            {getPriorityText(item.priority)}
-          </Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View
+            style={[
+              styles.priorityBadge,
+              {
+                backgroundColor: getPriorityColor(item.priority),
+                shadowColor: colors.onBackground,
+              },
+            ]}
+          >
+            <Text style={styles.priorityText}>
+              {getPriorityText(item.priority)}
+            </Text>
+          </View>
+          {item.isCompleted && (
+            <View style={styles.completedBadge}>
+              <Ionicons name="checkmark-circle" size={16} color="#66BB6A" />
+              <Text style={styles.completedText}>완료됨</Text>
+            </View>
+          )}
         </View>
       </View>
 
-      {/* 설명 섹션 */}
       <View
         style={[
           styles.descriptionContainer,
@@ -148,7 +158,6 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
         </Text>
       </View>
 
-      {/* 정보 섹션 */}
       <View style={styles.infoSection}>
         <View
           style={[
@@ -198,39 +207,53 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
         </View>
       </View>
 
-      {/* 액션 버튼 섹션 */}
       <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.startButton,
-            {
-              backgroundColor: colors.primary,
-              shadowColor: colors.onBackground,
-            },
-          ]}
-          onPress={() => handleStartTask(item)}
-        >
-          <Text style={[styles.startButtonText, { color: colors.onPrimary }]}>
-            🚀 시작하기
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.completeButton,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.primary,
-              shadowColor: colors.onBackground,
-            },
-          ]}
-          onPress={() => handleCompleteTask(item)}
-        >
-          <Text style={[styles.completeButtonText, { color: colors.primary }]}>
-            ✅ 완료하기
-          </Text>
-        </TouchableOpacity>
+        {item.isCompleted ? (
+          <View style={styles.completedMessageContainer}>
+            <Ionicons name="checkmark-circle" size={20} color="#66BB6A" />
+            <Text style={styles.completedMessageText}>
+              작업이 완료되었습니다
+            </Text>
+          </View>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                styles.startButton,
+                {
+                  backgroundColor: colors.primary,
+                  shadowColor: colors.onBackground,
+                },
+              ]}
+              onPress={() => handleStartTask(item)}
+            >
+              <Text
+                style={[styles.startButtonText, { color: colors.onPrimary }]}
+              >
+                🚀 시작하기
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                styles.completeButton,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.primary,
+                  shadowColor: colors.onBackground,
+                },
+              ]}
+              onPress={() => handleCompleteTask(item)}
+            >
+              <Text
+                style={[styles.completeButtonText, { color: colors.primary }]}
+              >
+                ✅ 완료하기
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </View>
   );
@@ -260,11 +283,20 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
     );
   };
 
-  const handleViewableItemsChanged = ({ viewableItems }: any) => {
+  // useCallback으로 고정
+  const handleViewableItemsChanged = useCallback(({ viewableItems }: any) => {
     if (viewableItems && viewableItems.length > 0) {
       setCurrentIndex(viewableItems[0].index);
     }
-  };
+  }, []);
+
+  // useMemo로 고정
+  const viewabilityConfig = useMemo(
+    () => ({
+      itemVisiblePercentThreshold: 50,
+    }),
+    []
+  );
 
   return (
     <Modal
@@ -282,12 +314,12 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
         >
           <View style={[styles.header, { borderBottomColor: colors.surface }]}>
             <Text style={[styles.title, { color: colors.onBackground }]}>
-              💫 {formatDate(date)}
+              {formatDate(date)}
             </Text>
             <Text
               style={[styles.subtitle, { color: colors.onBackground + "80" }]}
             >
-              예정된 작업 ({tasks.length}개)
+              완료한 작업 ({tasks.length}개)
             </Text>
             <TouchableOpacity
               style={[styles.closeButton, { backgroundColor: colors.surface }]}
@@ -320,11 +352,22 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
                 renderItem={renderTaskCard}
                 keyExtractor={(item) => item.id}
                 horizontal
-                pagingEnabled
+                pagingEnabled={false}
                 showsHorizontalScrollIndicator={false}
                 onViewableItemsChanged={handleViewableItemsChanged}
-                viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
-                contentContainerStyle={styles.flatListContent}
+                viewabilityConfig={viewabilityConfig}
+                contentContainerStyle={{
+                  paddingHorizontal: SIDE_PADDING,
+                  alignItems: "center",
+                }}
+                snapToInterval={CARD_WIDTH}
+                decelerationRate="fast"
+                snapToAlignment="start"
+                getItemLayout={(data, index) => ({
+                  length: CARD_WIDTH,
+                  offset: CARD_WIDTH * index,
+                  index,
+                })}
               />
               {renderPaginationDots()}
             </>
@@ -380,15 +423,13 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body1,
   },
   flatListContent: {
-    paddingHorizontal: 20,
     alignItems: "center",
   },
   taskCard: {
     borderRadius: 20,
     padding: 20,
     marginBottom: 28,
-    width: screenWidth - 40,
-    minWidth: screenWidth - 40,
+    width: CARD_WIDTH,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -547,6 +588,38 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 2,
+  },
+  completedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E0F7E9",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8,
+  },
+  completedText: {
+    color: "#388E3C",
+    fontWeight: "bold",
+    marginLeft: 4,
+    fontSize: 13,
+  },
+  completedMessageContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: "#E0F7E9",
+    borderWidth: 2,
+    borderColor: "#66BB6A",
+    flex: 1,
+  },
+  completedMessageText: {
+    color: "#388E3C",
+    fontWeight: "bold",
+    fontSize: 15,
+    marginLeft: 8,
   },
 });
 

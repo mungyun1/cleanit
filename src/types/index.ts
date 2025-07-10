@@ -12,6 +12,7 @@ export interface HouseholdTask {
   id: string;
   title: string;
   description?: string;
+  label?: string; // 작업 라벨 (카테고리별 한글 표시)
   category: "cleaning" | "laundry" | "pet"; // 청소, 빨래, 또는 반려동물
   space?: string; // 청소용 공간 (거실, 주방, 욕실 등)
   laundryType?: "whites" | "colors" | "delicates" | "bedding" | "towels"; // 빨래용 타입

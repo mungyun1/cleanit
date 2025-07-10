@@ -28,7 +28,7 @@ import {
   FREQUENCIES,
   DAYS_OF_WEEK,
   MONTHLY_WEEKS,
-} from "../data/taskFormData";
+} from "../data/unifiedData";
 import {
   createChecklistItem,
   getCleaningChecklistTemplate,
@@ -348,7 +348,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   styles.saveButton,
                   { backgroundColor: colors.primary },
                   !isFormValid() && [
-                    styles.saveButtonDisabled,
                     { backgroundColor: colors.onBackground + "30" },
                   ],
                 ]}
@@ -358,10 +357,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   style={[
                     styles.saveButtonText,
                     { color: colors.onPrimary },
-                    !isFormValid() && [
-                      styles.saveButtonTextDisabled,
-                      { color: colors.onBackground + "60" },
-                    ],
+                    !isFormValid() && [{ color: colors.onBackground + "60" }],
                   ]}
                 >
                   저장
@@ -1209,15 +1205,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  saveButtonDisabled: {
-    // backgroundColor는 인라인으로 적용
-  },
+
   saveButtonText: {
     ...TYPOGRAPHY.button,
   },
-  saveButtonTextDisabled: {
-    // color는 인라인으로 적용
-  },
+
   modalContent: {
     flex: 1,
     padding: 20,
@@ -1247,13 +1239,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
   },
-  categoryButtonSelected: {
-    // borderColor와 backgroundColor는 인라인으로 적용
-  },
+
   categoryButtonText: {
     ...TYPOGRAPHY.body2,
     marginLeft: 8,
     fontWeight: "500",
+  },
+  categoryButtonSelected: {
+    // borderColor와 backgroundColor는 인라인으로 적용
   },
   categoryButtonTextSelected: {
     // color는 인라인으로 적용

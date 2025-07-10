@@ -15,12 +15,7 @@ import { HouseholdTask, ChecklistItem, FrequencySettings } from "../types";
 import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
 import { getNextDueDate } from "../utils/dateUtils";
-import {
-  getSpaceColor,
-  getLaundryTypeColor,
-  getLaundryTypeText,
-  getFrequencyText,
-} from "../utils/taskUtils";
+import { getLegendColor, getFrequencyText } from "../utils/taskUtils";
 
 interface TaskDetailModalProps {
   task: HouseholdTask | null;
@@ -291,28 +286,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 >
                   {tempTask?.title || "작업 정보를 불러오는 중..."}
                 </Text>
-                <View
-                  style={[
-                    styles.categoryTag,
-                    {
-                      backgroundColor:
-                        tempTask?.category === "cleaning"
-                          ? getSpaceColor(tempTask?.space || "", memoizedColors)
-                          : getLaundryTypeColor(tempTask?.laundryType || ""),
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.categoryText,
-                      { color: memoizedColors.onBackground },
-                    ]}
-                  >
-                    {tempTask?.category === "cleaning"
-                      ? tempTask?.space
-                      : getLaundryTypeText(tempTask?.laundryType || "")}
-                  </Text>
-                </View>
               </View>
 
               {tempTask?.description && (
@@ -597,7 +570,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                           if (tempTask && onUpdateTask) {
                             onUpdateTask(tempTask);
                           }
-                          onEdit();
+                          onClose();
                         }
                       : undefined
                   }
@@ -612,7 +585,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                         : memoizedColors.onBackground + "10",
                       flex: 1,
                     },
-                    !hasChanges && styles.editButtonDisabled,
                   ]}
                   disabled={!hasChanges}
                   activeOpacity={hasChanges ? 0.7 : 1}
@@ -689,8 +661,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     minWidth: 90,
     minHeight: 48,
-    backgroundColor: undefined, // 동적으로 적용
-    borderColor: undefined, // 동적으로 적용
     borderWidth: 1,
   },
   editButtonText: {
@@ -698,14 +668,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  editButtonDisabled: {
-    opacity: 1,
-  },
+
   deleteButton: {
     padding: 8,
   },
   modalContent: {
-    // flex: 1, // flex: 1 제거
     padding: 20,
   },
   taskHeader: {
@@ -722,15 +689,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     flex: 1,
   },
-  categoryTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  categoryText: {
-    ...TYPOGRAPHY.caption,
-    fontWeight: "600",
-  },
+
   taskDescription: {
     ...TYPOGRAPHY.body2,
     lineHeight: 20,
