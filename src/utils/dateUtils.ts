@@ -2,6 +2,25 @@ export const formatDate = (date: Date): string => {
   return `${date.getMonth() + 1}월 ${date.getDate()}일`;
 };
 
+export const getTodayDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  const date = today.getDate();
+  const dayOfWeek = today.getDay();
+
+  const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+  const dayName = dayNames[dayOfWeek];
+
+  return {
+    fullDate: `${year}년 ${month}월 ${date}일`,
+    dayName: dayName,
+    date: date,
+    month: month,
+    year: year,
+  };
+};
+
 // 날짜가 특정 주기 설정에 따라 다음 예정일을 반환
 export const getNextDueDate = (
   lastCompleted: Date | undefined,

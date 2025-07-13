@@ -52,6 +52,12 @@ export const MONTHLY_WEEKS = [
   { label: "마지막주", value: "last" as const },
 ] as const;
 
+// 격주 주기 목록
+export const BIWEEKLY_WEEKS = [
+  { label: "첫째주/셋째주", value: "first_third" as const },
+  { label: "둘째주/넷째주", value: "second_fourth" as const },
+] as const;
+
 // ===== 체크리스트 템플릿 (통합) =====
 
 // 청소 기본 체크리스트 템플릿

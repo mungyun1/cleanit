@@ -59,6 +59,9 @@ export type DayOfWeek =
 // 월간 주기 타입
 export type MonthlyWeek = "first" | "second" | "third" | "fourth" | "last";
 
+// 격주 주기 타입
+export type BiweeklyWeek = "first_third" | "second_fourth";
+
 // 청소 주기 설정 타입
 export interface FrequencySettings {
   type?: Frequency; // 선택되지 않은 상태를 허용
@@ -66,6 +69,7 @@ export interface FrequencySettings {
   customDays?: number; // custom일 때 사용 (예: 3일마다)
   monthlyWeek?: MonthlyWeek; // monthly일 때 사용 (몇째주)
   monthlyDay?: DayOfWeek; // monthly일 때 사용 (무슨 요일)
+  biweeklyWeek?: BiweeklyWeek; // biweekly일 때 사용 (어떤 주)
 }
 
 // 공간 타입

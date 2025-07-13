@@ -125,6 +125,23 @@ export const validateTaskForm = (
     return { isValid: false, errorMessage: "주기를 선택해주세요." };
   }
 
+  // 매주 주기일 때 요일 선택 검증
+  if (frequency.type === "weekly") {
+    if (!frequency.daysOfWeek || frequency.daysOfWeek.length === 0) {
+      return { isValid: false, errorMessage: "요일을 선택해주세요." };
+    }
+  }
+
+  // 격주 주기일 때 주 선택과 요일 선택 검증
+  if (frequency.type === "biweekly") {
+    if (!frequency.biweeklyWeek) {
+      return { isValid: false, errorMessage: "주를 선택해주세요." };
+    }
+    if (!frequency.daysOfWeek || frequency.daysOfWeek.length === 0) {
+      return { isValid: false, errorMessage: "요일을 선택해주세요." };
+    }
+  }
+
   // 월간 주기일 때 몇째주와 요일 선택 검증
   if (frequency.type === "monthly") {
     if (!frequency.monthlyWeek) {

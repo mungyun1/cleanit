@@ -34,14 +34,19 @@ const TaskManagementScreen: React.FC = () => {
   } = useTaskContext();
 
   // 필터링된 작업 목록
-  const filteredTasks = unifiedTasks.filter((task) => {
-    if (selectedFilter === FILTER_OPTIONS.ALL) return true;
-    if (selectedFilter === FILTER_OPTIONS.CLEANING)
-      return task.category === "cleaning";
-    if (selectedFilter === FILTER_OPTIONS.LAUNDRY)
-      return task.category === "laundry";
-    return true;
-  });
+  const filteredTasks = unifiedTasks
+    .filter((task) => {
+      if (selectedFilter === FILTER_OPTIONS.ALL) return true;
+      if (selectedFilter === FILTER_OPTIONS.CLEANING)
+        return task.category === "cleaning";
+      if (selectedFilter === FILTER_OPTIONS.LAUNDRY)
+        return task.category === "laundry";
+      return true;
+    })
+    .sort((a, b) => {
+      // 생성일 기준으로 최신 작업이 상단에 오도록 정렬
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   // 통계 계산
   const stats = {
@@ -82,7 +87,7 @@ const TaskManagementScreen: React.FC = () => {
   };
 
   const handleAddTaskAndClose = (newTask: HouseholdTask) => {
-    setUnifiedTasks((prevTasks) => [...prevTasks, newTask]);
+    setUnifiedTasks((prevTasks) => [newTask, ...prevTasks]);
     setIsAddModalVisible(false);
   };
 

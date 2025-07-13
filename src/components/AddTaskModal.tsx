@@ -28,6 +28,7 @@ import {
   FREQUENCIES,
   DAYS_OF_WEEK,
   MONTHLY_WEEKS,
+  BIWEEKLY_WEEKS,
 } from "../data/unifiedData";
 import {
   createChecklistItem,
@@ -193,6 +194,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setSelectedFrequency({
       type: undefined,
       daysOfWeek: [],
+      biweeklyWeek: undefined,
     });
     setChecklistItems([]);
     // 제목도 초기화 (기본 제목인 경우에만)
@@ -268,6 +270,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setSelectedFrequency({
       type: undefined,
       daysOfWeek: [],
+      biweeklyWeek: undefined,
     });
     setCustomSpaces([]);
     setCustomLaundryTypes([]);
@@ -873,9 +876,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 ))}
               </View>
 
-              {/* 요일 선택 (weekly, biweekly일 때) */}
-              {(selectedFrequency.type === "weekly" ||
-                selectedFrequency.type === "biweekly") && (
+              {/* 요일 선택 (weekly일 때) */}
+              {selectedFrequency.type === "weekly" && (
                 <View style={styles.daysContainer}>
                   <Text
                     style={[styles.daysTitle, { color: colors.onBackground }]}
@@ -930,6 +932,123 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       </TouchableOpacity>
                     ))}
                   </View>
+                </View>
+              )}
+
+              {/* 격주 주기 선택 (biweekly일 때) */}
+              {selectedFrequency.type === "biweekly" && (
+                <View style={styles.biweeklyContainer}>
+                  <Text
+                    style={[
+                      styles.biweeklyTitle,
+                      { color: colors.onBackground },
+                    ]}
+                  >
+                    주 선택
+                  </Text>
+                  <View style={styles.biweeklyWeekGrid}>
+                    {BIWEEKLY_WEEKS.map((week) => (
+                      <TouchableOpacity
+                        key={week.value}
+                        style={[
+                          styles.biweeklyWeekButton,
+                          {
+                            borderColor: colors.onBackground + "30",
+                            backgroundColor: colors.surface,
+                          },
+                          selectedFrequency.biweeklyWeek === week.value && [
+                            styles.biweeklyWeekButtonSelected,
+                            {
+                              borderColor: colors.primary,
+                              backgroundColor: colors.primary,
+                            },
+                          ],
+                        ]}
+                        onPress={() => {
+                          setSelectedFrequency({
+                            ...selectedFrequency,
+                            biweeklyWeek: week.value,
+                          });
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.biweeklyWeekButtonText,
+                            { color: colors.onBackground },
+                            selectedFrequency.biweeklyWeek === week.value && [
+                              styles.biweeklyWeekButtonTextSelected,
+                              { color: colors.onPrimary },
+                            ],
+                          ]}
+                        >
+                          {week.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  {selectedFrequency.biweeklyWeek && (
+                    <View style={styles.biweeklyDayContainer}>
+                      <Text
+                        style={[
+                          styles.biweeklyDayTitle,
+                          { color: colors.onBackground },
+                        ]}
+                      >
+                        요일 선택
+                      </Text>
+                      <View style={styles.biweeklyDayGrid}>
+                        {DAYS_OF_WEEK.map((day) => (
+                          <TouchableOpacity
+                            key={day.value}
+                            style={[
+                              styles.biweeklyDayButton,
+                              {
+                                borderColor: colors.onBackground + "30",
+                                backgroundColor: colors.surface,
+                              },
+                              selectedFrequency.daysOfWeek?.includes(
+                                day.value
+                              ) && [
+                                styles.biweeklyDayButtonSelected,
+                                {
+                                  borderColor: colors.primary,
+                                  backgroundColor: colors.primary,
+                                },
+                              ],
+                            ]}
+                            onPress={() => {
+                              const currentDays =
+                                selectedFrequency.daysOfWeek || [];
+                              const newDays = toggleDayOfWeek(
+                                currentDays,
+                                day.value
+                              );
+                              setSelectedFrequency({
+                                ...selectedFrequency,
+                                daysOfWeek: newDays,
+                              });
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.biweeklyDayButtonText,
+                                { color: colors.onBackground },
+                                selectedFrequency.daysOfWeek?.includes(
+                                  day.value
+                                ) && [
+                                  styles.biweeklyDayButtonTextSelected,
+                                  { color: colors.onPrimary },
+                                ],
+                              ]}
+                            >
+                              {day.label}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                  )}
                 </View>
               )}
 
@@ -1383,6 +1502,64 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.caption,
   },
   monthlyDayButtonTextSelected: {
+    fontWeight: "600",
+  },
+
+  biweeklyContainer: {
+    marginTop: 16,
+  },
+  biweeklyTitle: {
+    ...TYPOGRAPHY.body2,
+    marginBottom: 8,
+    fontWeight: "500",
+  },
+  biweeklyWeekGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 16,
+  },
+  biweeklyWeekButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  biweeklyWeekButtonSelected: {
+    // borderColor와 backgroundColor는 인라인으로 적용
+  },
+  biweeklyWeekButtonText: {
+    ...TYPOGRAPHY.caption,
+  },
+  biweeklyWeekButtonTextSelected: {
+    fontWeight: "600",
+  },
+  biweeklyDayContainer: {
+    marginTop: 12,
+  },
+  biweeklyDayTitle: {
+    ...TYPOGRAPHY.body2,
+    marginBottom: 8,
+    fontWeight: "500",
+  },
+  biweeklyDayGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  biweeklyDayButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  biweeklyDayButtonSelected: {
+    // borderColor와 backgroundColor는 인라인으로 적용
+  },
+  biweeklyDayButtonText: {
+    ...TYPOGRAPHY.caption,
+  },
+  biweeklyDayButtonTextSelected: {
     fontWeight: "600",
   },
 

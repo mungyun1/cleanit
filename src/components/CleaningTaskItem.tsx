@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { HouseholdTask, FrequencySettings } from "../types";
+import { HouseholdTask, FrequencySettings, ChecklistItem } from "../types";
 import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
 import TaskDetailModal from "./TaskDetailModal";
@@ -155,6 +155,28 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
     if (onEdit) onEdit(task.id);
   };
 
+  // 체크리스트 상위 3개 항목을 description으로 생성하는 함수
+  const generateDescriptionFromChecklist = (
+    checklistItems: ChecklistItem[]
+  ) => {
+    if (!checklistItems || checklistItems.length === 0) {
+      return "체크리스트가 없습니다";
+    }
+
+    const top3Items = checklistItems.slice(0, 3);
+    const itemTitles = top3Items.map((item) => item.title);
+
+    if (checklistItems.length <= 3) {
+      return itemTitles.join(" • ");
+    } else {
+      return `${itemTitles.join(" • ")} 등`;
+    }
+  };
+
+  // 체크리스트 description 생성
+  const displayDescription =
+    task.description || generateDescriptionFromChecklist(task.checklistItems);
+
   return (
     <>
       <TouchableOpacity
@@ -217,7 +239,7 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
             </TouchableOpacity>
           </View>
 
-          {task.description && (
+          {displayDescription && (
             <Text
               style={[
                 styles.description,
@@ -228,7 +250,7 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
                 ],
               ]}
             >
-              {task.description}
+              {displayDescription}
             </Text>
           )}
 

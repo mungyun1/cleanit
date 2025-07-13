@@ -1,11 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
@@ -14,84 +8,21 @@ import Header from "../components/Header";
 import AddTaskModal from "../components/AddTaskModal";
 import SectionHeader from "../components/SectionHeader";
 import { HouseholdTask } from "../types";
-import { UNIFIED_TASKS, convertToScheduledTask } from "../data/unifiedData";
 import { useTaskContext } from "../contexts/TaskContext";
+import { getTodayDate } from "../utils/dateUtils";
+import { filterTodayTasks, calculateTaskStats } from "../utils/taskUtils";
 
 const HomeScreen: React.FC = () => {
   const { colors } = useTheme();
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const {
-    unifiedTasks,
-    setUnifiedTasks,
-    scheduledTasksData,
-    setScheduledTasksData,
-  } = useTaskContext();
-  // 오늘 날짜 포맷팅
-  const getTodayDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const date = today.getDate();
-    const dayOfWeek = today.getDay();
-
-    const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
-    const dayName = dayNames[dayOfWeek];
-
-    return {
-      fullDate: `${year}년 ${month}월 ${date}일`,
-      dayName: dayName,
-      date: date,
-      month: month,
-      year: year,
-    };
-  };
+  const { unifiedTasks, setUnifiedTasks, setScheduledTasksData } =
+    useTaskContext();
 
   const todayInfo = getTodayDate();
 
   // 오늘 날짜에 해당하는 작업 필터링
   const todayTasks = useMemo(() => {
-    const today = new Date();
-    const todayString = today.toISOString().split("T")[0]; // YYYY-MM-DD 형식
-
-    // unifiedTasks에서 오늘 날짜에 해당하는 작업만 필터링
-    const filteredTasks = unifiedTasks.filter((task) => {
-      // daily 작업은 항상 포함
-      if (task.frequency.type === "daily") return true;
-
-      // weekly 작업은 오늘이 해당 요일인지 확인
-      if (task.frequency.type === "weekly" && task.frequency.daysOfWeek) {
-        const dayNames = [
-          "sunday",
-          "monday",
-          "tuesday",
-          "wednesday",
-          "thursday",
-          "friday",
-          "saturday",
-        ];
-        const todayDayName = dayNames[today.getDay()];
-        return task.frequency.daysOfWeek.includes(todayDayName as any);
-      }
-
-      // biweekly 작업은 간단히 매주 포함 (실제로는 더 복잡한 로직 필요)
-      if (task.frequency.type === "biweekly") {
-        const dayNames = [
-          "sunday",
-          "monday",
-          "tuesday",
-          "wednesday",
-          "thursday",
-          "friday",
-          "saturday",
-        ];
-        const todayDayName = dayNames[today.getDay()];
-        return task.frequency.daysOfWeek?.includes(todayDayName as any);
-      }
-
-      return false;
-    });
-
-    return filteredTasks;
+    return filterTodayTasks(unifiedTasks);
   }, [unifiedTasks]);
 
   const handleToggleTask = useCallback(
@@ -136,29 +67,13 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleAddTask = (newTask: HouseholdTask) => {
-    setUnifiedTasks((prevTasks) => [...prevTasks, newTask]);
+    setUnifiedTasks((prevTasks) => [newTask, ...prevTasks]);
     setIsAddModalVisible(false);
   };
 
   // 통계 계산
   const stats = useMemo(() => {
-    const totalTasks = todayTasks.length;
-    const completedTasks = todayTasks.filter((task) => task.isCompleted).length;
-    const remainingTasks = totalTasks - completedTasks;
-    const cleaningTasks = todayTasks.filter(
-      (task) => task.category === "cleaning"
-    ).length;
-    const laundryTasks = todayTasks.filter(
-      (task) => task.category === "laundry"
-    ).length;
-
-    return {
-      total: totalTasks,
-      completed: completedTasks,
-      remaining: remainingTasks,
-      cleaning: cleaningTasks,
-      laundry: laundryTasks,
-    };
+    return calculateTaskStats(todayTasks);
   }, [todayTasks]);
 
   return (
@@ -346,6 +261,7 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <SectionHeader
             title="오늘의 가사"
+            showAddButton={false}
             onAddPress={() => setIsAddModalVisible(true)}
           />
           {todayTasks.length > 0 ? (
