@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TYPOGRAPHY } from "../constants";
@@ -10,24 +10,25 @@ import SectionHeader from "../components/SectionHeader";
 import { HouseholdTask } from "../types";
 import { useTaskContext } from "../contexts/TaskContext";
 import { getTodayDate } from "../utils/dateUtils";
-import { filterTodayTasks, calculateTaskStats } from "../utils/taskUtils";
+import { calculateTaskStats } from "../utils/taskUtils";
 
 const HomeScreen: React.FC = () => {
   const { colors } = useTheme();
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const { unifiedTasks, setUnifiedTasks, setScheduledTasksData } =
-    useTaskContext();
+  const {
+    todayTasks,
+    setTodayTasks,
+    taskTemplates,
+    setTaskTemplates,
+    setScheduledTasksData,
+    generateTodayTasks,
+  } = useTaskContext();
 
   const todayInfo = getTodayDate();
 
-  // 오늘 날짜에 해당하는 작업 필터링
-  const todayTasks = useMemo(() => {
-    return filterTodayTasks(unifiedTasks);
-  }, [unifiedTasks]);
-
   const handleToggleTask = useCallback(
     (taskId: string) => {
-      setUnifiedTasks((prevTasks) => {
+      setTodayTasks((prevTasks) => {
         const updatedTasks = prevTasks.map((task) =>
           task.id === taskId
             ? { ...task, isCompleted: !task.isCompleted, updatedAt: new Date() }
@@ -36,7 +37,7 @@ const HomeScreen: React.FC = () => {
         return updatedTasks;
       });
     },
-    [setUnifiedTasks]
+    [setTodayTasks]
   );
 
   const handleEditTask = (taskId: string) => {
@@ -44,7 +45,8 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleUpdateTask = (updatedTask: HouseholdTask) => {
-    setUnifiedTasks((prevTasks) => {
+    // 오늘의 작업만 업데이트 (작업 템플릿에는 영향 없음)
+    setTodayTasks((prevTasks) => {
       const updatedTasks = prevTasks.map((task) =>
         task.id === updatedTask.id ? updatedTask : task
       );
@@ -53,7 +55,8 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setUnifiedTasks((prevTasks) =>
+    // 오늘의 작업에서만 삭제 (작업 템플릿에는 영향 없음)
+    setTodayTasks((prevTasks) =>
       prevTasks.filter((task) => task.id !== taskId)
     );
     setScheduledTasksData((prev) => {
@@ -67,13 +70,16 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleAddTask = (newTask: HouseholdTask) => {
-    setUnifiedTasks((prevTasks) => [newTask, ...prevTasks]);
+    // 작업 템플릿에 추가
+    setTaskTemplates((prevTasks) => [newTask, ...prevTasks]);
+    // 오늘의 작업에 추가
+    setTodayTasks((prevTasks) => [newTask, ...prevTasks]);
     setIsAddModalVisible(false);
   };
 
   // 통계 계산
   const stats = useMemo(() => {
-    return calculateTaskStats(todayTasks);
+    return calculateTaskStats(todayTasks || []);
   }, [todayTasks]);
 
   return (
@@ -264,8 +270,8 @@ const HomeScreen: React.FC = () => {
             showAddButton={false}
             onAddPress={() => setIsAddModalVisible(true)}
           />
-          {todayTasks.length > 0 ? (
-            todayTasks.map((task) => (
+          {(todayTasks || []).length > 0 ? (
+            (todayTasks || []).map((task) => (
               <CleaningTaskItem
                 key={task.id}
                 task={task}

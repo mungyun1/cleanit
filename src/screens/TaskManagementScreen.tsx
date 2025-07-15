@@ -26,21 +26,18 @@ const TaskManagementScreen: React.FC = () => {
     FILTER_OPTIONS.ALL
   );
 
-  const {
-    unifiedTasks,
-    setUnifiedTasks,
-    scheduledTasksData,
-    setScheduledTasksData,
-  } = useTaskContext();
+  const { taskTemplates, setTaskTemplates, setScheduledTasksData } =
+    useTaskContext();
 
   // 필터링된 작업 목록
-  const filteredTasks = unifiedTasks
+  const filteredTasks = (taskTemplates || [])
     .filter((task) => {
       if (selectedFilter === FILTER_OPTIONS.ALL) return true;
       if (selectedFilter === FILTER_OPTIONS.CLEANING)
         return task.category === "cleaning";
       if (selectedFilter === FILTER_OPTIONS.LAUNDRY)
         return task.category === "laundry";
+      if (selectedFilter === FILTER_OPTIONS.PET) return task.category === "pet";
       return true;
     })
     .sort((a, b) => {
@@ -48,30 +45,27 @@ const TaskManagementScreen: React.FC = () => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-  // 통계 계산
+  // 통계 계산 (작업 관리 페이지는 전체 작업 수만 표시)
   const stats = {
-    totalTasks: unifiedTasks.length,
-    completedTasks: unifiedTasks.filter((t) => t.isCompleted).length,
+    totalTasks: taskTemplates?.length || 0,
+    completedTasks: 0, // 작업 관리 페이지에서는 완료 상태를 고려하지 않음
   };
 
   const handleFilterChange = (filter: string) => setSelectedFilter(filter);
 
   const handleToggleTask = (taskId: string) => {
-    setUnifiedTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
-      )
-    );
+    // 작업 관리 페이지에서는 완료 상태를 변경하지 않음
+    // 작업 템플릿은 완료 상태와 무관하게 관리
   };
 
   const handleUpdateTask = (updatedTask: HouseholdTask) => {
-    setUnifiedTasks((prev) =>
+    setTaskTemplates((prev) =>
       prev.map((task) => (task.id === updatedTask.id ? updatedTask : task))
     );
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setUnifiedTasks((prev) => prev.filter((task) => task.id !== taskId));
+    setTaskTemplates((prev) => prev.filter((task) => task.id !== taskId));
     setScheduledTasksData((prev) => {
       const updated = { ...prev };
       Object.keys(updated).forEach((date) => {
@@ -87,7 +81,7 @@ const TaskManagementScreen: React.FC = () => {
   };
 
   const handleAddTaskAndClose = (newTask: HouseholdTask) => {
-    setUnifiedTasks((prevTasks) => [newTask, ...prevTasks]);
+    setTaskTemplates((prevTasks) => [newTask, ...prevTasks]);
     setIsAddModalVisible(false);
   };
 
@@ -174,6 +168,29 @@ const TaskManagementScreen: React.FC = () => {
                 {FILTER_OPTIONS.LAUNDRY}
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                { borderColor: colors.primary },
+                selectedFilter === FILTER_OPTIONS.PET && {
+                  backgroundColor: colors.primary + "20",
+                },
+              ]}
+              onPress={() => handleFilterChange(FILTER_OPTIONS.PET)}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  { color: colors.onBackground },
+                  selectedFilter === FILTER_OPTIONS.PET && {
+                    color: colors.primary,
+                    fontWeight: "bold",
+                  },
+                ]}
+              >
+                {FILTER_OPTIONS.PET}
+              </Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
 
@@ -232,15 +249,16 @@ const TaskManagementScreen: React.FC = () => {
             onAddPress={() => setIsAddModalVisible(true)}
           />
 
-          {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => (
+          {(filteredTasks || []).length > 0 ? (
+            (filteredTasks || []).map((task) => (
               <CleaningTaskItem
                 key={task.id}
                 task={task}
-                onToggle={() => handleToggleTask(task.id)}
                 onEdit={handleEditTask}
                 onUpdateTask={handleUpdateTask}
                 onDeleteTask={handleDeleteTask}
+                showCompleteButton={false}
+                showCheckbox={false}
               />
             ))
           ) : (

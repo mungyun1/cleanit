@@ -26,6 +26,7 @@ interface TaskDetailModalProps {
   onEdit?: () => void;
   onUpdateTask?: (updatedTask: HouseholdTask) => void;
   onDeleteTask?: (taskId: string) => void;
+  showCompleteButton?: boolean;
 }
 
 const { width, height } = Dimensions.get("window");
@@ -57,6 +58,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   onEdit,
   onUpdateTask,
   onDeleteTask,
+  showCompleteButton = true,
 }) => {
   const { colors } = useTheme();
   const [newChecklistItem, setNewChecklistItem] = useState("");
@@ -402,37 +404,39 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   </Text>
                 )}
 
-                <TouchableOpacity
-                  onPress={() => {
-                    if (tempTask) {
-                      const updatedTask = {
-                        ...tempTask,
-                        isCompleted: !tempTask.isCompleted,
-                        updatedAt: new Date(),
-                      };
-                      setTempTask(updatedTask);
-                    }
-                  }}
-                  activeOpacity={0.7}
-                  style={completeButtonStyle}
-                >
-                  <Ionicons
-                    name={
-                      tempTask?.isCompleted
-                        ? "checkmark-circle"
-                        : "ellipse-outline"
-                    }
-                    size={20}
-                    color={
-                      tempTask?.isCompleted
-                        ? memoizedColors.onPrimary
-                        : memoizedColors.primary
-                    }
-                  />
-                  <Text style={completeButtonTextStyle}>
-                    {tempTask?.isCompleted ? "완료됨" : "완료하기"}
-                  </Text>
-                </TouchableOpacity>
+                {showCompleteButton && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (tempTask) {
+                        const updatedTask = {
+                          ...tempTask,
+                          isCompleted: !tempTask.isCompleted,
+                          updatedAt: new Date(),
+                        };
+                        setTempTask(updatedTask);
+                      }
+                    }}
+                    activeOpacity={0.7}
+                    style={completeButtonStyle}
+                  >
+                    <Ionicons
+                      name={
+                        tempTask?.isCompleted
+                          ? "checkmark-circle"
+                          : "ellipse-outline"
+                      }
+                      size={20}
+                      color={
+                        tempTask?.isCompleted
+                          ? memoizedColors.onPrimary
+                          : memoizedColors.primary
+                      }
+                    />
+                    <Text style={completeButtonTextStyle}>
+                      {tempTask?.isCompleted ? "완료됨" : "완료하기"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               <View

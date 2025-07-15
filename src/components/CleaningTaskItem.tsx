@@ -14,6 +14,8 @@ interface CleaningTaskItemProps {
   onEdit?: (taskId: string) => void;
   onUpdateTask?: (updatedTask: HouseholdTask) => void;
   onDeleteTask?: (taskId: string) => void;
+  showCompleteButton?: boolean;
+  showCheckbox?: boolean;
 }
 
 const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
@@ -23,6 +25,8 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
   onEdit,
   onUpdateTask,
   onDeleteTask,
+  showCompleteButton = true,
+  showCheckbox = true,
 }) => {
   const { colors } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -225,18 +229,24 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
                 </Text>
               </View>
             </View>
-            <TouchableOpacity
-              onPress={handleToggleComplete}
-              style={styles.checkbox}
-            >
-              <Ionicons
-                name={task.isCompleted ? "checkmark-circle" : "ellipse-outline"}
-                size={24}
-                color={
-                  task.isCompleted ? colors.primary : colors.onBackground + "60"
-                }
-              />
-            </TouchableOpacity>
+            {showCheckbox && (
+              <TouchableOpacity
+                onPress={handleToggleComplete}
+                style={styles.checkbox}
+              >
+                <Ionicons
+                  name={
+                    task.isCompleted ? "checkmark-circle" : "ellipse-outline"
+                  }
+                  size={24}
+                  color={
+                    task.isCompleted
+                      ? colors.primary
+                      : colors.onBackground + "60"
+                  }
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
           {displayDescription && (
@@ -269,6 +279,7 @@ const CleaningTaskItem: React.FC<CleaningTaskItemProps> = ({
         onEdit={handleEdit}
         onUpdateTask={onUpdateTask}
         onDeleteTask={onDeleteTask}
+        showCompleteButton={showCompleteButton}
       />
     </>
   );
@@ -326,7 +337,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   checkbox: {
-    padding: 4,
+    paddingHorizontal: 4,
   },
   description: {
     ...TYPOGRAPHY.body2,

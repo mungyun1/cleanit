@@ -27,8 +27,9 @@ const CalendarScreen: React.FC = () => {
     []
   );
   const {
-    unifiedTasks,
-    setUnifiedTasks,
+    taskTemplates,
+    setTaskTemplates,
+    todayTasks,
     scheduledTasksData,
     setScheduledTasksData,
   } = useTaskContext();
@@ -44,7 +45,7 @@ const CalendarScreen: React.FC = () => {
 
   // 작업 삭제 함수
   const deleteTask = (taskId: string) => {
-    setUnifiedTasks((prev) => prev.filter((task) => task.id !== taskId));
+    setTaskTemplates((prev) => prev.filter((task) => task.id !== taskId));
     setScheduledTasksData((prev) => {
       const updated = { ...prev };
       Object.keys(updated).forEach((date) => {
@@ -69,7 +70,7 @@ const CalendarScreen: React.FC = () => {
 
       // 실제 완료된 작업들과 목데이터를 합침
       const allCompletedTasks = [
-        ...unifiedTasks.filter((task) => task.isCompleted),
+        ...(taskTemplates || []).filter((task) => task.isCompleted),
         ...COMPLETED_TASKS_MOCK_DATA,
       ];
 
@@ -117,47 +118,11 @@ const CalendarScreen: React.FC = () => {
         }
       });
 
-      // 오늘 예정된 작업들 마킹 (HomeScreen과 동일한 로직)
-      const todayDate = new Date();
-      const todayTasks = unifiedTasks.filter((task) => {
-        // daily 작업은 항상 포함
-        if (task.frequency.type === "daily") return true;
-
-        // weekly 작업은 오늘이 해당 요일인지 확인
-        if (task.frequency.type === "weekly" && task.frequency.daysOfWeek) {
-          const dayNames = [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-          ];
-          const todayDayName = dayNames[todayDate.getDay()];
-          return task.frequency.daysOfWeek.includes(todayDayName as any);
-        }
-
-        // biweekly 작업은 간단히 매주 포함
-        if (task.frequency.type === "biweekly") {
-          const dayNames = [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-          ];
-          const todayDayName = dayNames[todayDate.getDay()];
-          return task.frequency.daysOfWeek?.includes(todayDayName as any);
-        }
-
-        return false;
-      });
+      // 오늘 예정된 작업들 마킹 (todayTasks 사용)
+      const todayScheduledTasks = todayTasks || [];
 
       // 오늘 예정된 작업이 있으면 오늘 날짜에 특별한 마킹 추가
-      if (todayTasks.length > 0) {
+      if (todayScheduledTasks.length > 0) {
         const todayColor = colors.secondary; // 오늘 예정된 작업은 다른 색상 사용
 
         if (marked[today]) {
@@ -242,7 +207,8 @@ const CalendarScreen: React.FC = () => {
     colors.primary,
     colors.secondary,
     isDarkMode,
-    unifiedTasks,
+    taskTemplates,
+    todayTasks,
   ]);
 
   const onDayPress = (day: DateData) => {
@@ -254,7 +220,7 @@ const CalendarScreen: React.FC = () => {
     if (isToday) {
       // 오늘인 경우: 완료된 작업 + 예정된 작업 모두 표시
       const allCompletedTasks = [
-        ...unifiedTasks.filter((task) => task.isCompleted),
+        ...(taskTemplates || []).filter((task) => task.isCompleted),
         ...COMPLETED_TASKS_MOCK_DATA,
       ];
 
@@ -267,50 +233,14 @@ const CalendarScreen: React.FC = () => {
         return completedDateString === day.dateString;
       });
 
-      // 오늘 예정된 작업들 (HomeScreen과 동일한 로직)
-      const todayDate = new Date();
-      const todayTasks = unifiedTasks.filter((task) => {
-        // daily 작업은 항상 포함
-        if (task.frequency.type === "daily") return true;
+      // 오늘 예정된 작업들 (todayTasks 사용)
+      const todayScheduledTasks = todayTasks || [];
 
-        // weekly 작업은 오늘이 해당 요일인지 확인
-        if (task.frequency.type === "weekly" && task.frequency.daysOfWeek) {
-          const dayNames = [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-          ];
-          const todayDayName = dayNames[todayDate.getDay()];
-          return task.frequency.daysOfWeek.includes(todayDayName as any);
-        }
-
-        // biweekly 작업은 간단히 매주 포함
-        if (task.frequency.type === "biweekly") {
-          const dayNames = [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-          ];
-          const todayDayName = dayNames[todayDate.getDay()];
-          return task.frequency.daysOfWeek?.includes(todayDayName as any);
-        }
-
-        return false;
-      });
-
-      tasksForDate = [...completedTasksForToday, ...todayTasks];
+      tasksForDate = [...completedTasksForToday, ...todayScheduledTasks];
     } else {
       // 과거 날짜인 경우: 완료된 작업만 표시
       const allCompletedTasks = [
-        ...unifiedTasks.filter((task) => task.isCompleted),
+        ...(taskTemplates || []).filter((task) => task.isCompleted),
         ...COMPLETED_TASKS_MOCK_DATA,
       ];
 
