@@ -1,47 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
-import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
 import Header from "../components/Header";
 import ScheduledTasksModal from "../components/ScheduledTasksModal";
-import {
-  CALENDAR_MOCK_DATA,
-  MONTHLY_STATS,
-  LEGEND_DATA,
-  CalendarMarkedDates,
-  SCHEDULED_TASKS_DATA as initialScheduledTasksData,
-  ScheduledTask,
-  UNIFIED_TASKS as initialUnifiedTasks,
-} from "../data/unifiedData";
-import { getLegendColor } from "../utils/taskUtils";
+import CalendarStats from "../components/CalendarStats";
+import { ScheduledTask } from "../data/unifiedData";
 import { COMPLETED_TASKS_MOCK_DATA } from "../data/calendarMockData";
 import { useTaskContext } from "../contexts/TaskContext";
+import { useCalendarMarking } from "../hooks/useCalendarMarking";
+import {
+  getTodayString,
+  convertToScheduledTask,
+  createCalendarTheme,
+} from "../utils/calendarUtils";
 
 const CalendarScreen: React.FC = () => {
   const { colors, isDarkMode } = useTheme();
   const [selectedDate, setSelectedDate] = useState("");
-  const [markedDates, setMarkedDates] = useState<CalendarMarkedDates>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDateTasks, setSelectedDateTasks] = useState<ScheduledTask[]>(
     []
   );
-  const {
-    taskTemplates,
-    setTaskTemplates,
-    todayTasks,
-    scheduledTasksData,
-    setScheduledTasksData,
-  } = useTaskContext();
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
-  const getTodayString = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  const { taskTemplates, setTaskTemplates, todayTasks, setScheduledTasksData } =
+    useTaskContext();
+
+  // 캘린더 마킹 데이터 생성 훅 사용
+  const markedDates = useCalendarMarking({
+    taskTemplates: taskTemplates || [],
+    todayTasks: todayTasks || [],
+    completedTasksMockData: COMPLETED_TASKS_MOCK_DATA as any,
+    colors,
+    isDarkMode,
+  });
 
   // 작업 삭제 함수
   const deleteTask = (taskId: string) => {
@@ -55,161 +48,6 @@ const CalendarScreen: React.FC = () => {
       return updated;
     });
   };
-
-  useEffect(() => {
-    // 완료된 작업들과 오늘 예정된 작업들을 캘린더 마킹 데이터 생성
-    const generateMarkedDates = () => {
-      const marked: CalendarMarkedDates = {};
-      const today = getTodayString();
-
-      // LEGEND_DATA에서 공간명(label)로 색상 찾기
-      const getLegendColor = (spaceOrLabel: string) => {
-        const found = LEGEND_DATA.find((item) => item.label === spaceOrLabel);
-        return found ? found.color : colors.primary;
-      };
-
-      // 실제 완료된 작업들과 목데이터를 합침
-      const allCompletedTasks = [
-        ...(taskTemplates || []).filter((task) => task.isCompleted),
-        ...COMPLETED_TASKS_MOCK_DATA,
-      ];
-
-      // 완료된 작업들의 날짜를 마킹
-      allCompletedTasks.forEach((task) => {
-        if (task.lastCompleted) {
-          const completedDate = new Date(task.lastCompleted);
-          const dateString = completedDate.toISOString().split("T")[0];
-
-          // 과거부터 오늘까지만 표시
-          if (dateString <= today) {
-            const taskColor = getLegendColor(
-              task.space || (task.category === "laundry" ? "빨래" : "기타")
-            );
-
-            // 같은 날짜에 여러 작업이 있는 경우 기존 스타일 유지하면서 추가
-            if (marked[dateString]) {
-              // 기존 마킹이 있으면 dotColor만 업데이트 (첫 번째 작업의 색상 유지)
-              marked[dateString] = {
-                ...marked[dateString],
-                marked: true,
-              };
-            } else {
-              marked[dateString] = {
-                marked: true,
-                dotColor: taskColor,
-                textColor: colors.onBackground,
-                customStyles: {
-                  container: {
-                    backgroundColor: taskColor + "20", // 20% 투명도
-                    borderRadius: 20,
-                    width: 36,
-                    height: 36,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  },
-                  text: {
-                    color: colors.onBackground,
-                    fontWeight: "600",
-                  },
-                },
-              };
-            }
-          }
-        }
-      });
-
-      // 오늘 예정된 작업들 마킹 (todayTasks 사용)
-      const todayScheduledTasks = todayTasks || [];
-
-      // 오늘 예정된 작업이 있으면 오늘 날짜에 특별한 마킹 추가
-      if (todayScheduledTasks.length > 0) {
-        const todayColor = colors.secondary; // 오늘 예정된 작업은 다른 색상 사용
-
-        if (marked[today]) {
-          // 완료된 작업과 예정된 작업이 모두 있는 경우
-          marked[today] = {
-            ...marked[today],
-            marked: true,
-            // 완료된 작업과 예정된 작업을 구분하기 위해 다른 스타일 적용
-            customStyles: {
-              container: {
-                backgroundColor: todayColor + "30", // 30% 투명도
-                borderRadius: 20,
-                width: 36,
-                height: 36,
-                justifyContent: "center",
-                alignItems: "center",
-                borderWidth: 2,
-                borderColor: todayColor,
-              },
-              text: {
-                color: colors.onBackground,
-                fontWeight: "bold",
-                fontSize: 16,
-              },
-            },
-          };
-        } else {
-          // 오늘 예정된 작업만 있는 경우
-          marked[today] = {
-            marked: true,
-            dotColor: todayColor,
-            textColor: colors.onBackground,
-            customStyles: {
-              container: {
-                backgroundColor: todayColor + "30", // 30% 투명도
-                borderRadius: 20,
-                width: 36,
-                height: 36,
-                justifyContent: "center",
-                alignItems: "center",
-                borderWidth: 2,
-                borderColor: todayColor,
-              },
-              text: {
-                color: colors.onBackground,
-                fontWeight: "bold",
-                fontSize: 16,
-              },
-            },
-          };
-        }
-      }
-
-      // 오늘 날짜 스타일 추가 (완료된 작업이 있든 없든)
-      marked[today] = {
-        ...marked[today],
-        customStyles: {
-          container: {
-            backgroundColor: colors.primary + "40",
-            borderRadius: 20,
-            width: 36,
-            height: 36,
-            justifyContent: "center",
-            alignItems: "center",
-            borderWidth: 2,
-            borderColor: colors.primary,
-          },
-          text: {
-            color: isDarkMode ? "#FFFFFF" : colors.onPrimary,
-            fontWeight: "bold",
-            fontSize: 16,
-          },
-        },
-      };
-
-      return marked;
-    };
-
-    setMarkedDates(generateMarkedDates());
-  }, [
-    colors.onBackground,
-    colors.primary,
-    colors.secondary,
-    isDarkMode,
-    taskTemplates,
-    todayTasks,
-  ]);
 
   const onDayPress = (day: DateData) => {
     const today = getTodayString();
@@ -262,20 +100,9 @@ const CalendarScreen: React.FC = () => {
     }
 
     // 작업들을 ScheduledTask 형식으로 변환
-    const convertedTasks: ScheduledTask[] = tasksForDate.map((task) => ({
-      id: task.id,
-      title: task.title,
-      description: task.description || "",
-      area: task.category === "cleaning" ? task.space || "기타" : "빨래",
-      priority: "medium",
-      estimatedTime: 30,
-      color: task.category === "cleaning" ? colors.primary : colors.secondary,
-      severity: "normal",
-      isCompleted: task.isCompleted,
-      category: task.category,
-      frequency: task.frequency,
-      label: (task as any).label || "",
-    }));
+    const convertedTasks: ScheduledTask[] = tasksForDate.map((task) =>
+      convertToScheduledTask(task, colors)
+    );
 
     setSelectedDate(day.dateString);
     setSelectedDateTasks(convertedTasks);
@@ -286,30 +113,9 @@ const CalendarScreen: React.FC = () => {
     setModalVisible(false);
   };
 
-  // 강제 다크/라이트 모드 배경색 테스트
-  const getTheme = () => ({
-    calendarBackground: isDarkMode ? "#000000" : "#FFFFFF",
-    textSectionTitleColor: colors.onBackground,
-    selectedDayBackgroundColor: colors.primary,
-    selectedDayTextColor: colors.onPrimary,
-    todayTextColor: isDarkMode ? "#FFFFFF" : colors.primary,
-    dayTextColor: colors.onBackground,
-    textDisabledColor: colors.onBackground + "40",
-    dotColor: colors.primary,
-    selectedDotColor: colors.onPrimary,
-    arrowColor: colors.primary,
-    monthTextColor: colors.onBackground,
-    indicatorColor: colors.primary,
-    textDayFontFamily: "System",
-    textMonthFontFamily: "System",
-    textDayHeaderFontFamily: "System",
-    textDayFontWeight: "300" as const,
-    textMonthFontWeight: "bold" as const,
-    textDayHeaderFontWeight: "600" as const,
-    textDayFontSize: 16,
-    textMonthFontSize: 18,
-    textDayHeaderFontSize: 14,
-  });
+  const onMonthChange = (month: any) => {
+    setCurrentMonth(new Date(month.timestamp));
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -328,110 +134,22 @@ const CalendarScreen: React.FC = () => {
             <Calendar
               key={isDarkMode ? "dark" : "light"}
               onDayPress={onDayPress}
+              onMonthChange={onMonthChange}
               markedDates={markedDates}
-              theme={getTheme()}
-              enableSwipeMonths={false}
+              theme={createCalendarTheme(colors, isDarkMode)}
+              enableSwipeMonths={true}
               showWeekNumbers={false}
               firstDay={1}
               hideExtraDays={true}
-              disableMonthChange={true}
+              disableMonthChange={false}
               hideDayNames={false}
               markingType="custom"
+              style={styles.calendar}
             />
           </View>
         </View>
 
-        <View style={styles.statsContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>
-            이번 달 통계
-          </Text>
-          <View style={styles.statsGrid}>
-            <View
-              style={[
-                styles.statCard,
-                {
-                  backgroundColor: colors.surface,
-                  shadowColor: colors.onBackground,
-                },
-              ]}
-            >
-              <Text style={[styles.statNumber, { color: colors.primary }]}>
-                {MONTHLY_STATS.completedTasks}
-              </Text>
-              <Text
-                style={[
-                  styles.statLabel,
-                  { color: colors.onBackground + "80" },
-                ]}
-              >
-                완료된 작업
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.statCard,
-                {
-                  backgroundColor: colors.surface,
-                  shadowColor: colors.onBackground,
-                },
-              ]}
-            >
-              <Text style={[styles.statNumber, { color: colors.primary }]}>
-                {MONTHLY_STATS.incompleteTasks}
-              </Text>
-              <Text
-                style={[
-                  styles.statLabel,
-                  { color: colors.onBackground + "80" },
-                ]}
-              >
-                미완료 작업
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.statCard,
-                {
-                  backgroundColor: colors.surface,
-                  shadowColor: colors.onBackground,
-                },
-              ]}
-            >
-              <Text style={[styles.statNumber, { color: colors.primary }]}>
-                {MONTHLY_STATS.completionRate}
-              </Text>
-              <Text
-                style={[
-                  styles.statLabel,
-                  { color: colors.onBackground + "80" },
-                ]}
-              >
-                완료율
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.statCard,
-                {
-                  backgroundColor: colors.surface,
-                  shadowColor: colors.onBackground,
-                },
-              ]}
-            >
-              <Text style={[styles.statNumber, { color: colors.primary }]}>
-                {MONTHLY_STATS.consecutiveDays}
-              </Text>
-              <Text
-                style={[
-                  styles.statLabel,
-                  { color: colors.onBackground + "80" },
-                ]}
-              >
-                연속 완료일
-              </Text>
-            </View>
-          </View>
-        </View>
+        <CalendarStats selectedMonth={currentMonth} />
       </ScrollView>
 
       <ScheduledTasksModal
@@ -454,75 +172,16 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 20,
   },
-  header: {
-    padding: 20,
-    paddingTop: 10,
-  },
   calendarContainer: {
     paddingHorizontal: 20,
     marginVertical: 20,
-  },
-  sectionTitle: {
-    ...TYPOGRAPHY.h3,
-    marginBottom: 15,
   },
   calendarWrapper: {
     borderRadius: 12,
     padding: 10,
   },
-  statsContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  statCard: {
-    width: "48%",
-    marginBottom: 15,
-    borderRadius: 12,
-    padding: 18,
-    alignItems: "center",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  statNumber: {
-    ...TYPOGRAPHY.h2,
-    marginBottom: 5,
-  },
-  statLabel: {
-    ...TYPOGRAPHY.caption,
-  },
-  legendContainer: {
-    marginTop: 18,
-    marginBottom: 10,
-  },
-  legendTitle: {
-    ...TYPOGRAPHY.body2,
-    fontWeight: "bold",
-    marginBottom: 6,
-  },
-  legendItems: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 18,
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 6,
-  },
-  legendText: {
-    ...TYPOGRAPHY.caption,
+  calendar: {
+    height: 350,
   },
 });
 

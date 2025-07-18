@@ -172,19 +172,19 @@ export const UNIFIED_TASKS: HouseholdTask[] = [
     category: "cleaning",
     space: "주방",
     frequency: { type: "daily" },
-    isCompleted: true,
+    isCompleted: false,
     checklistItems: [
       {
         id: "2-1",
         title: "설거지",
-        isCompleted: true,
+        isCompleted: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
         id: "2-2",
         title: "주방 카운터 정리",
-        isCompleted: true,
+        isCompleted: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       },

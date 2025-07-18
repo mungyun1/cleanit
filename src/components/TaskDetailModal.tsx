@@ -71,6 +71,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     string | null
   >(null);
   const [editingChecklistText, setEditingChecklistText] = useState("");
+  const [editingDescription, setEditingDescription] = useState("");
+  const [scrollViewRef, setScrollViewRef] = useState<ScrollView | null>(null);
 
   // colors 객체를 메모이제이션하여 불필요한 재렌더링 방지
   const memoizedColors = useMemo(
@@ -155,7 +157,27 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       const completionChanged =
         originalTask.isCompleted !== tempTask.isCompleted;
 
-      const hasChangesNow = checklistChanged || completionChanged;
+      const titleChanged = originalTask.title !== tempTask.title;
+      const descriptionChanged =
+        originalTask.description !== tempTask.description;
+
+      // 유효성 검사: 제목이 비어있지 않아야 함
+      const isTitleValid = tempTask.title && tempTask.title.trim().length > 0;
+
+      // 체크리스트 항목 중 빈 제목이 있는지 확인
+      const hasEmptyChecklistItems = tempTask.checklistItems.some(
+        (item) => !item.title || item.title.trim().length === 0
+      );
+
+      const hasValidChanges =
+        checklistChanged ||
+        completionChanged ||
+        titleChanged ||
+        descriptionChanged;
+
+      const hasChangesNow = Boolean(
+        hasValidChanges && isTitleValid && !hasEmptyChecklistItems
+      );
       setHasChanges(hasChangesNow);
     }
   }, [tempTask, originalTask]);
@@ -182,9 +204,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const handleAddChecklistItem = () => {
     if (!newChecklistItem.trim() || !tempTask) return;
 
+    const trimmedText = newChecklistItem.trim();
+    if (trimmedText.length === 0) return;
+
     const newItem: ChecklistItem = {
       id: Date.now().toString(),
-      title: newChecklistItem.trim(),
+      title: trimmedText,
       isCompleted: false,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -241,11 +266,16 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     setIsEditMode(false);
     setEditingChecklistItem(null);
     setEditingChecklistText("");
+    setEditingDescription("");
     onClose();
   };
 
   const handleToggleEditMode = () => {
     setIsEditMode(!isEditMode);
+    if (!isEditMode && tempTask) {
+      // 편집 모드로 들어갈 때 현재 description을 편집 상태로 설정
+      setEditingDescription(tempTask.description || "");
+    }
   };
 
   const handleTitleChange = (newTitle: string) => {
@@ -253,6 +283,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     setTempTask({
       ...tempTask,
       title: newTitle,
+      updatedAt: new Date(),
+    });
+  };
+
+  const handleDescriptionChange = (newDescription: string) => {
+    if (!tempTask) return;
+    setTempTask({
+      ...tempTask,
+      description: newDescription,
       updatedAt: new Date(),
     });
   };
@@ -278,13 +317,21 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     if (!tempTask || !editingChecklistItem || !editingChecklistText.trim())
       return;
 
+    const trimmedText = editingChecklistText.trim();
+    if (trimmedText.length === 0) {
+      // 빈 텍스트는 저장하지 않음
+      setEditingChecklistItem(null);
+      setEditingChecklistText("");
+      return;
+    }
+
     const updatedTask = {
       ...tempTask,
       checklistItems: tempTask.checklistItems.map((item) =>
         item.id === editingChecklistItem
           ? {
               ...item,
-              title: editingChecklistText.trim(),
+              title: trimmedText,
               updatedAt: new Date(),
             }
           : item
@@ -313,7 +360,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        enabled={true}
       >
         <View style={styles.modalOverlay}>
           <View
@@ -364,23 +412,58 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             </View>
 
             <ScrollView
+              ref={setScrollViewRef}
               style={styles.modalContent}
               showsVerticalScrollIndicator={false}
               removeClippedSubviews={true}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.scrollContent}
+              automaticallyAdjustKeyboardInsets={true}
+              keyboardDismissMode="interactive"
             >
               <View style={styles.taskHeader}>
                 <View style={styles.titleSection}>
                   {isEditMode ? (
-                    <TextInput
-                      style={[
-                        styles.taskTitle,
-                        { color: memoizedColors.onBackground },
-                      ]}
-                      value={tempTask?.title || ""}
-                      onChangeText={handleTitleChange}
-                      placeholder="작업 제목을 입력하세요"
-                      placeholderTextColor={memoizedColors.onBackground + "60"}
-                    />
+                    <View style={styles.titleEditContainer}>
+                      <TextInput
+                        style={[
+                          styles.taskTitle,
+                          styles.titleInput,
+                          {
+                            color: memoizedColors.onBackground,
+                            borderColor: memoizedColors.primary + "40",
+                            backgroundColor: memoizedColors.surface,
+                          },
+                        ]}
+                        value={tempTask?.title || ""}
+                        onChangeText={handleTitleChange}
+                        placeholder="작업 제목을 입력하세요"
+                        placeholderTextColor={
+                          memoizedColors.onBackground + "60"
+                        }
+                        onFocus={() => {
+                          // 제목 입력 필드에 포커스가 있을 때 스크롤 조정
+                          setTimeout(() => {
+                            scrollViewRef?.scrollTo({ y: 0, animated: true });
+                          }, 50);
+                        }}
+                        onLayout={(event) => {
+                          // 레이아웃이 완료된 후 위치 확인
+                          const { y } = event.nativeEvent.layout;
+                          if (y > 200) {
+                            // 제목이 화면 아래쪽에 있으면 위로 스크롤
+                            scrollViewRef?.scrollTo({ y: 0, animated: true });
+                          }
+                        }}
+                      />
+                      <View style={styles.titleEditIndicator}>
+                        <Ionicons
+                          name="create-outline"
+                          size={16}
+                          color={memoizedColors.primary}
+                        />
+                      </View>
+                    </View>
                   ) : (
                     <Text
                       style={[
@@ -393,15 +476,48 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   )}
                 </View>
 
-                {tempTask?.description && (
-                  <Text
-                    style={[
-                      styles.taskDescription,
-                      { color: memoizedColors.onBackground + "80" },
-                    ]}
-                  >
-                    {tempTask.description}
-                  </Text>
+                {(tempTask?.description || isEditMode) && (
+                  <View style={styles.descriptionSection}>
+                    {isEditMode ? (
+                      <TextInput
+                        style={[
+                          styles.taskDescription,
+                          styles.descriptionInput,
+                          {
+                            color: memoizedColors.onBackground,
+                            borderColor: memoizedColors.onBackground + "20",
+                            backgroundColor: memoizedColors.surface,
+                          },
+                        ]}
+                        value={editingDescription}
+                        onChangeText={setEditingDescription}
+                        onEndEditing={() =>
+                          handleDescriptionChange(editingDescription)
+                        }
+                        onFocus={() => {
+                          // description 입력 필드에 포커스가 있을 때 스크롤 조정
+                          setTimeout(() => {
+                            scrollViewRef?.scrollTo({ y: 100, animated: true });
+                          }, 300);
+                        }}
+                        placeholder="작업 설명을 입력하세요 (선택사항)"
+                        placeholderTextColor={
+                          memoizedColors.onBackground + "60"
+                        }
+                        multiline
+                        numberOfLines={3}
+                      />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.taskDescription,
+                          { color: memoizedColors.onBackground + "80" },
+                        ]}
+                      >
+                        {tempTask?.description}
+                      </Text>
+                    )}
+                  </View>
                 )}
 
                 {showCompleteButton && (
@@ -540,26 +656,34 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   >
                     체크리스트
                   </Text>
-                  <TouchableOpacity
-                    onPress={() => setIsAddingItem(!isAddingItem)}
-                    style={styles.addItemButton}
-                  >
-                    <Ionicons
-                      name={isAddingItem ? "remove" : "add"}
-                      size={20}
-                      color={memoizedColors.primary}
-                    />
-                  </TouchableOpacity>
+                  {isEditMode && (
+                    <TouchableOpacity
+                      onPress={() => setIsAddingItem(!isAddingItem)}
+                      style={styles.addItemButton}
+                    >
+                      <Ionicons
+                        name={isAddingItem ? "remove" : "add"}
+                        size={20}
+                        color={memoizedColors.primary}
+                      />
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 {isAddingItem && (
-                  <View style={styles.addItemContainer}>
+                  <View
+                    style={[
+                      styles.addItemContainer,
+                      { backgroundColor: memoizedColors.surface },
+                    ]}
+                  >
                     <TextInput
                       style={[
                         styles.addItemInput,
                         {
-                          borderColor: memoizedColors.onBackground + "30",
+                          borderColor: memoizedColors.onBackground + "20",
                           color: memoizedColors.onBackground,
+                          backgroundColor: memoizedColors.background,
                         },
                       ]}
                       placeholder="새 체크리스트 항목 추가"
@@ -567,19 +691,27 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       value={newChecklistItem}
                       onChangeText={setNewChecklistItem}
                       onSubmitEditing={handleAddChecklistItem}
+                      onFocus={() => {
+                        // 체크리스트 입력 필드에 포커스가 있을 때 스크롤 조정
+                        setTimeout(() => {
+                          scrollViewRef?.scrollToEnd({ animated: true });
+                        }, 300);
+                      }}
                       returnKeyType="done"
+                      blurOnSubmit={false}
                     />
                     <TouchableOpacity
                       onPress={handleAddChecklistItem}
                       style={[
                         styles.addItemSubmitButton,
-                        { backgroundColor: memoizedColors.primary + "20" },
+                        { backgroundColor: memoizedColors.primary },
                       ]}
+                      disabled={!newChecklistItem.trim()}
                     >
                       <Ionicons
                         name="checkmark"
                         size={20}
-                        color={memoizedColors.primary}
+                        color={memoizedColors.onPrimary}
                       />
                     </TouchableOpacity>
                   </View>
@@ -595,14 +727,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                         { backgroundColor: memoizedColors.surface },
                       ]}
                     >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          flex: 1,
-                        }}
-                      >
-                        {isEditMode && editingChecklistItem === item.id ? (
+                      {isEditMode && editingChecklistItem === item.id ? (
+                        <View style={styles.checklistEditContainer}>
                           <TextInput
                             style={[
                               styles.checklistItemText,
@@ -614,6 +740,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                               {
                                 borderBottomWidth: 1,
                                 borderColor: memoizedColors.primary,
+                                flex: 1,
                               },
                             ]}
                             value={editingChecklistText}
@@ -621,9 +748,39 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                             onSubmitEditing={handleSaveChecklistItem}
                             autoFocus
                           />
-                        ) : (
+                          <View style={styles.checklistIconArea}>
+                            <TouchableOpacity
+                              onPress={handleSaveChecklistItem}
+                              style={[
+                                styles.addItemSubmitButton,
+                                styles.checklistIconButton,
+                              ]}
+                            >
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color={memoizedColors.primary}
+                              />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              onPress={handleCancelEditChecklistItem}
+                              style={[
+                                styles.deleteItemButton,
+                                styles.checklistIconButton,
+                              ]}
+                            >
+                              <Ionicons
+                                name="close"
+                                size={16}
+                                color={memoizedColors.error}
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ) : (
+                        <>
                           <TouchableOpacity
-                            activeOpacity={1}
+                            activeOpacity={0.7}
                             onPress={() => {
                               if (!isEditMode)
                                 handleToggleChecklistItem(item.id);
@@ -633,11 +790,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                                   item.title
                                 );
                             }}
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              flex: 1,
-                            }}
+                            style={styles.checklistContent}
                           >
                             <View style={styles.checklistCheckbox}>
                               <Ionicons
@@ -667,40 +820,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                               {item.title}
                             </Text>
                           </TouchableOpacity>
-                        )}
-                      </View>
-                      <View style={styles.checklistIconArea}>
-                        {isEditMode && editingChecklistItem === item.id ? (
-                          <>
-                            <TouchableOpacity
-                              onPress={handleSaveChecklistItem}
-                              style={[
-                                styles.addItemSubmitButton,
-                                styles.checklistIconButton,
-                              ]}
-                            >
-                              <Ionicons
-                                name="checkmark"
-                                size={16}
-                                color={memoizedColors.primary}
-                              />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              onPress={handleCancelEditChecklistItem}
-                              style={[
-                                styles.deleteItemButton,
-                                styles.checklistIconButton,
-                              ]}
-                            >
-                              <Ionicons
-                                name="close"
-                                size={16}
-                                color={memoizedColors.error}
-                              />
-                            </TouchableOpacity>
-                          </>
-                        ) : (
-                          <>
+                          <View style={styles.checklistIconArea}>
                             <TouchableOpacity
                               onPress={() =>
                                 isEditMode &&
@@ -756,9 +876,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                                 />
                               </TouchableOpacity>
                             )}
-                          </>
-                        )}
-                      </View>
+                          </View>
+                        </>
+                      )}
                     </View>
                   ))
                 ) : (
@@ -884,7 +1004,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     maxHeight: height * 0.9,
     minHeight: height * 0.5,
-    // flex: 1 제거
+    flex: 1,
   },
   modalHeader: {
     flexDirection: "row",
@@ -930,6 +1050,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     padding: 20,
+    flex: 1,
   },
   taskHeader: {
     marginBottom: 24,
@@ -1002,28 +1123,23 @@ const styles = StyleSheet.create({
   addItemContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 0,
-    marginTop: 0,
-    padding: 0,
-    paddingTop: 0,
-    paddingBottom: 0,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
   },
   addItemInput: {
     flex: 1,
     borderWidth: 1,
     borderRadius: 8,
-    padding: 4,
-    marginRight: 4,
+    padding: 12,
     ...TYPOGRAPHY.body2,
-    marginTop: 0,
-    marginBottom: 0,
-    paddingTop: 0,
-    paddingBottom: 0,
   },
   addItemSubmitButton: {
     padding: 12,
     borderRadius: 8,
-    minHeight: 32, // 고정 높이 적용
+    minHeight: 44,
+    minWidth: 44,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1116,6 +1232,55 @@ const styles = StyleSheet.create({
     margin: 0,
     justifyContent: "center",
     alignItems: "center",
+  },
+  checklistEditContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  checklistContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 200, // 키보드가 올라올 때를 대비한 여백 증가
+  },
+  descriptionSection: {
+    marginBottom: 16,
+  },
+  descriptionInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    textAlignVertical: "top",
+  },
+  titleEditContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "relative",
+    marginBottom: 8,
+    width: "100%",
+  },
+  titleInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "600",
+    width: "100%",
+  },
+  titleEditIndicator: {
+    position: "absolute",
+    right: 16,
+    top: "50%",
+    transform: [{ translateY: -8 }],
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 12,
+    padding: 4,
+    zIndex: 1,
   },
 });
 

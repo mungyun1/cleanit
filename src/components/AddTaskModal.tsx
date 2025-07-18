@@ -1224,24 +1224,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       { backgroundColor: colors.surface },
                     ]}
                   >
-                    <TouchableOpacity
-                      onPress={() => handleToggleChecklistItem(item.id)}
-                      style={styles.checklistCheckbox}
-                    >
-                      <Ionicons
-                        name={
-                          item.isCompleted
-                            ? "checkmark-circle"
-                            : "ellipse-outline"
-                        }
-                        size={20}
-                        color={
-                          item.isCompleted
-                            ? colors.primary
-                            : colors.onBackground + "60"
-                        }
-                      />
-                    </TouchableOpacity>
                     <Text
                       style={[
                         styles.checklistItemText,
