@@ -23,7 +23,7 @@ const CalendarStats: React.FC<CalendarStatsProps> = ({ selectedMonth }) => {
   return (
     <View style={styles.statsContainer}>
       <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>
-        {selectedMonth.getMonth() + 1}월 통계
+        📊 {selectedMonth.getMonth() + 1}월 통계
       </Text>
       <View style={styles.statsGrid}>
         <View

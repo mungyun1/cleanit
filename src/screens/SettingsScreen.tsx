@@ -44,11 +44,7 @@ const SettingsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Header
-          title="⚙️ 설정"
-          subtitle="앱 설정을 관리하세요"
-          showMenuButton={true}
-        />
+        <Header title="⚙️ 설정" showMenuButton={true} />
         <View style={styles.section}>
           <Text
             style={[styles.sectionTitle, { color: colors.onBackground + "80" }]}

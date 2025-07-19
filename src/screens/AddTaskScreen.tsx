@@ -5,7 +5,7 @@ import Header from "../components/Header";
 
 const AddTaskScreen = () => (
   <View style={styles.container}>
-    <Header title="➕ 새 작업 추가" subtitle="새로운 청소 작업을 추가하세요" />
+    <Header title="➕ 새 작업 추가" />
     <View style={styles.content}>
       <Text style={styles.placeholderText}>청소 항목 추가 화면</Text>
     </View>

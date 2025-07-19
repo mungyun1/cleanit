@@ -24,10 +24,8 @@ const CalendarScreen: React.FC = () => {
   );
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  const { taskTemplates, setTaskTemplates, todayTasks, setScheduledTasksData } =
-    useTaskContext();
+  const { taskTemplates, todayTasks } = useTaskContext();
 
-  // 캘린더 마킹 데이터 생성 훅 사용
   const markedDates = useCalendarMarking({
     taskTemplates: taskTemplates || [],
     todayTasks: todayTasks || [],
@@ -36,19 +34,6 @@ const CalendarScreen: React.FC = () => {
     isDarkMode,
   });
 
-  // 작업 삭제 함수
-  const deleteTask = (taskId: string) => {
-    setTaskTemplates((prev) => prev.filter((task) => task.id !== taskId));
-    setScheduledTasksData((prev) => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach((date) => {
-        updated[date] = updated[date].filter((task) => task.id !== taskId);
-        if (updated[date].length === 0) delete updated[date];
-      });
-      return updated;
-    });
-  };
-
   const onDayPress = (day: DateData) => {
     const today = getTodayString();
     const isToday = day.dateString === today;
@@ -56,7 +41,6 @@ const CalendarScreen: React.FC = () => {
     let tasksForDate: any[] = [];
 
     if (isToday) {
-      // 오늘인 경우: 완료된 작업 + 예정된 작업 모두 표시
       const allCompletedTasks = [
         ...(taskTemplates || []).filter((task) => task.isCompleted),
         ...COMPLETED_TASKS_MOCK_DATA,
@@ -71,12 +55,10 @@ const CalendarScreen: React.FC = () => {
         return completedDateString === day.dateString;
       });
 
-      // 오늘 예정된 작업들 (todayTasks 사용)
       const todayScheduledTasks = todayTasks || [];
 
       tasksForDate = [...completedTasksForToday, ...todayScheduledTasks];
     } else {
-      // 과거 날짜인 경우: 완료된 작업만 표시
       const allCompletedTasks = [
         ...(taskTemplates || []).filter((task) => task.isCompleted),
         ...COMPLETED_TASKS_MOCK_DATA,
@@ -94,12 +76,10 @@ const CalendarScreen: React.FC = () => {
       tasksForDate = completedTasksForDate;
     }
 
-    // 작업이 없는 날짜는 클릭하지 않음
     if (tasksForDate.length === 0) {
       return;
     }
 
-    // 작업들을 ScheduledTask 형식으로 변환
     const convertedTasks: ScheduledTask[] = tasksForDate.map((task) =>
       convertToScheduledTask(task, colors)
     );
@@ -124,11 +104,7 @@ const CalendarScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Header
-          title="📅 캘린더"
-          subtitle="완료된 작업 기록을 확인하세요"
-          showMenuButton={true}
-        />
+        <Header title="📅 캘린더" showMenuButton={true} />
         <View style={styles.calendarContainer}>
           <View style={styles.calendarWrapper}>
             <Calendar
@@ -137,13 +113,13 @@ const CalendarScreen: React.FC = () => {
               onMonthChange={onMonthChange}
               markedDates={markedDates}
               theme={createCalendarTheme(colors, isDarkMode)}
-              enableSwipeMonths={true}
+              enableSwipeMonths={false}
               showWeekNumbers={false}
               firstDay={1}
               hideExtraDays={true}
               disableMonthChange={false}
               hideDayNames={false}
-              markingType="custom"
+              markingType="dot"
               style={styles.calendar}
             />
           </View>
@@ -174,11 +150,10 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     paddingHorizontal: 20,
-    marginVertical: 20,
+    marginVertical: 10,
   },
   calendarWrapper: {
     borderRadius: 12,
-    padding: 10,
   },
   calendar: {
     height: 350,

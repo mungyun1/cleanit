@@ -33,7 +33,7 @@ export const convertToScheduledTask = (
 
 // 캘린더 테마 생성
 export const createCalendarTheme = (colors: any, isDarkMode: boolean) => ({
-  calendarBackground: isDarkMode ? "#000000" : "#FFFFFF",
+  calendarBackground: colors.background,
   textSectionTitleColor: colors.onBackground,
   selectedDayBackgroundColor: colors.primary,
   selectedDayTextColor: colors.onPrimary,

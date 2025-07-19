@@ -94,6 +94,50 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     ]
   );
 
+  // 테마별 스타일 객체 생성
+  const themedStyles = useMemo(
+    () => ({
+      modalContainer: { backgroundColor: memoizedColors.background },
+      modalHeader: { borderBottomColor: memoizedColors.onBackground + "20" },
+      modalTitle: { color: memoizedColors.onBackground },
+      taskTitle: { color: memoizedColors.onBackground },
+      taskDescription: { color: memoizedColors.onBackground + "80" },
+      titleInput: {
+        color: memoizedColors.onBackground,
+        borderColor: memoizedColors.primary + "40",
+        backgroundColor: memoizedColors.surface,
+      },
+      descriptionInput: {
+        color: memoizedColors.onBackground,
+        borderColor: memoizedColors.onBackground + "20",
+        backgroundColor: memoizedColors.surface,
+      },
+      infoSection: { backgroundColor: memoizedColors.surface },
+      infoLabel: { color: memoizedColors.onBackground + "60" },
+      infoValue: { color: memoizedColors.onBackground },
+      infoValueEdit: { color: memoizedColors.primary },
+      checklistTitle: { color: memoizedColors.onBackground },
+      addItemContainer: { backgroundColor: memoizedColors.surface },
+      addItemInput: {
+        borderColor: memoizedColors.onBackground + "20",
+        color: memoizedColors.onBackground,
+        backgroundColor: memoizedColors.background,
+      },
+      checklistItem: { backgroundColor: memoizedColors.surface },
+      checklistItemText: { color: memoizedColors.onBackground },
+      completedItemText: { color: memoizedColors.onBackground + "60" },
+      checkButton: {
+        backgroundColor: memoizedColors.primary,
+      },
+      checkButtonInactive: {
+        backgroundColor: "rgba(0, 0, 0, 0.05)",
+      },
+      emptyChecklist: { color: memoizedColors.onBackground + "60" },
+      modalFooter: { borderTopColor: memoizedColors.onBackground + "20" },
+    }),
+    [memoizedColors]
+  );
+
   // 완료 버튼 스타일을 메모이제이션
   const completeButtonStyle = useMemo(
     () => [
@@ -364,18 +408,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         enabled={true}
       >
         <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalContainer,
-              { backgroundColor: memoizedColors.background },
-            ]}
-          >
-            <View
-              style={[
-                styles.modalHeader,
-                { borderBottomColor: memoizedColors.onBackground + "20" },
-              ]}
-            >
+          <View style={[styles.modalContainer, themedStyles.modalContainer]}>
+            <View style={[styles.modalHeader, themedStyles.modalHeader]}>
               <TouchableOpacity
                 onPress={handleClose}
                 style={styles.closeButton}
@@ -389,7 +423,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <Text
                 style={[
                   styles.modalTitle,
-                  { color: memoizedColors.onBackground },
+                  themedStyles.modalTitle,
                   styles.fixedModalTitle, // minHeight 적용
                 ]}
                 numberOfLines={1}
@@ -421,20 +455,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               automaticallyAdjustKeyboardInsets={true}
               keyboardDismissMode="interactive"
             >
-              <View style={styles.taskHeader}>
+              <View>
                 <View style={styles.titleSection}>
                   {isEditMode ? (
                     <View style={styles.titleEditContainer}>
                       <TextInput
-                        style={[
-                          styles.taskTitle,
-                          styles.titleInput,
-                          {
-                            color: memoizedColors.onBackground,
-                            borderColor: memoizedColors.primary + "40",
-                            backgroundColor: memoizedColors.surface,
-                          },
-                        ]}
+                        style={[styles.taskTitle, styles.titleInput]}
                         value={tempTask?.title || ""}
                         onChangeText={handleTitleChange}
                         placeholder="작업 제목을 입력하세요"
@@ -465,12 +491,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       </View>
                     </View>
                   ) : (
-                    <Text
-                      style={[
-                        styles.taskTitle,
-                        { color: memoizedColors.onBackground },
-                      ]}
-                    >
+                    <Text style={[styles.taskTitle, themedStyles.taskTitle]}>
                       {tempTask?.title || "작업 정보를 불러오는 중..."}
                     </Text>
                   )}
@@ -483,11 +504,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                         style={[
                           styles.taskDescription,
                           styles.descriptionInput,
-                          {
-                            color: memoizedColors.onBackground,
-                            borderColor: memoizedColors.onBackground + "20",
-                            backgroundColor: memoizedColors.surface,
-                          },
                         ]}
                         value={editingDescription}
                         onChangeText={setEditingDescription}
@@ -511,7 +527,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       <Text
                         style={[
                           styles.taskDescription,
-                          { color: memoizedColors.onBackground + "80" },
+                          themedStyles.taskDescription,
                         ]}
                       >
                         {tempTask?.description}
@@ -555,19 +571,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 )}
               </View>
 
-              <View
-                style={[
-                  styles.infoSection,
-                  { backgroundColor: memoizedColors.surface },
-                ]}
-              >
+              <View style={[styles.infoSection, themedStyles.infoSection]}>
                 <View style={styles.infoRow}>
-                  <Text
-                    style={[
-                      styles.infoLabel,
-                      { color: memoizedColors.onBackground + "60" },
-                    ]}
-                  >
+                  <Text style={[styles.infoLabel, themedStyles.infoLabel]}>
                     주기
                   </Text>
                   {isEditMode ? (
@@ -581,41 +587,23 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       }}
                     >
                       <Text
-                        style={[
-                          styles.infoValue,
-                          { color: memoizedColors.primary },
-                        ]}
+                        style={[styles.infoValue, themedStyles.infoValueEdit]}
                       >
                         {getFrequencyText(tempTask?.frequency)} (편집)
                       </Text>
                     </TouchableOpacity>
                   ) : (
-                    <Text
-                      style={[
-                        styles.infoValue,
-                        { color: memoizedColors.onBackground },
-                      ]}
-                    >
+                    <Text style={[styles.infoValue, themedStyles.infoValue]}>
                       {getFrequencyText(tempTask?.frequency)}
                     </Text>
                   )}
                 </View>
 
                 <View style={styles.infoRow}>
-                  <Text
-                    style={[
-                      styles.infoLabel,
-                      { color: memoizedColors.onBackground + "60" },
-                    ]}
-                  >
+                  <Text style={[styles.infoLabel, themedStyles.infoLabel]}>
                     마지막 작업
                   </Text>
-                  <Text
-                    style={[
-                      styles.infoValue,
-                      { color: memoizedColors.onBackground },
-                    ]}
-                  >
+                  <Text style={[styles.infoValue, themedStyles.infoValue]}>
                     {tempTask?.lastCompleted
                       ? formatDate(tempTask.lastCompleted)
                       : "기록 없음"}
@@ -623,20 +611,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </View>
 
                 <View style={styles.infoRow}>
-                  <Text
-                    style={[
-                      styles.infoLabel,
-                      { color: memoizedColors.onBackground + "60" },
-                    ]}
-                  >
+                  <Text style={[styles.infoLabel, themedStyles.infoLabel]}>
                     다음 예정일
                   </Text>
-                  <Text
-                    style={[
-                      styles.infoValue,
-                      { color: memoizedColors.onBackground },
-                    ]}
-                  >
+                  <Text style={[styles.infoValue, themedStyles.infoValue]}>
                     {getNextDueDate(
                       tempTask?.lastCompleted || new Date(),
                       tempTask?.createdAt || new Date(),
@@ -649,12 +627,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <View style={styles.checklistSection}>
                 <View style={styles.checklistHeader}>
                   <Text
-                    style={[
-                      styles.checklistTitle,
-                      { color: memoizedColors.onBackground },
-                    ]}
+                    style={[styles.checklistTitle, themedStyles.checklistTitle]}
                   >
-                    체크리스트
+                    ✅ 체크리스트
                   </Text>
                   {isEditMode && (
                     <TouchableOpacity
@@ -674,18 +649,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <View
                     style={[
                       styles.addItemContainer,
-                      { backgroundColor: memoizedColors.surface },
+                      themedStyles.addItemContainer,
                     ]}
                   >
                     <TextInput
-                      style={[
-                        styles.addItemInput,
-                        {
-                          borderColor: memoizedColors.onBackground + "20",
-                          color: memoizedColors.onBackground,
-                          backgroundColor: memoizedColors.background,
-                        },
-                      ]}
+                      style={[styles.addItemInput, themedStyles.addItemInput]}
                       placeholder="새 체크리스트 항목 추가"
                       placeholderTextColor={memoizedColors.onBackground + "60"}
                       value={newChecklistItem}
@@ -722,10 +690,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   tempTask.checklistItems.map((item) => (
                     <View
                       key={item.id}
-                      style={[
-                        styles.checklistItem,
-                        { backgroundColor: memoizedColors.surface },
-                      ]}
+                      style={[styles.checklistItem, themedStyles.checklistItem]}
                     >
                       {isEditMode && editingChecklistItem === item.id ? (
                         <View style={styles.checklistEditContainer}>
@@ -735,7 +700,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                               { color: memoizedColors.onBackground },
                               item.isCompleted && [
                                 styles.completedItemText,
-                                { color: memoizedColors.onBackground + "60" },
+                                themedStyles.completedItemText,
                               ],
                               {
                                 borderBottomWidth: 1,
@@ -782,9 +747,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                           <TouchableOpacity
                             activeOpacity={0.7}
                             onPress={() => {
-                              if (!isEditMode)
-                                handleToggleChecklistItem(item.id);
-                              else
+                              if (isEditMode)
                                 handleStartEditChecklistItem(
                                   item.id,
                                   item.title
@@ -792,28 +755,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                             }}
                             style={styles.checklistContent}
                           >
-                            <View style={styles.checklistCheckbox}>
-                              <Ionicons
-                                name={
-                                  item.isCompleted
-                                    ? "checkmark-circle"
-                                    : "ellipse-outline"
-                                }
-                                size={20}
-                                color={
-                                  item.isCompleted
-                                    ? memoizedColors.primary
-                                    : memoizedColors.onBackground + "60"
-                                }
-                              />
-                            </View>
                             <Text
                               style={[
                                 styles.checklistItemText,
                                 { color: memoizedColors.onBackground },
                                 item.isCompleted && [
                                   styles.completedItemText,
-                                  { color: memoizedColors.onBackground + "60" },
+                                  themedStyles.completedItemText,
                                 ],
                               ]}
                             >
@@ -822,59 +770,74 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                           </TouchableOpacity>
                           <View style={styles.checklistIconArea}>
                             <TouchableOpacity
-                              onPress={() =>
-                                isEditMode &&
-                                editingChecklistItem !== item.id &&
-                                handleStartEditChecklistItem(
-                                  item.id,
-                                  item.title
-                                )
-                              }
+                              onPress={() => handleToggleChecklistItem(item.id)}
                               style={[
-                                styles.addItemButton,
-                                styles.checklistIconButton,
+                                styles.checkButton,
+                                item.isCompleted
+                                  ? themedStyles.checkButton
+                                  : themedStyles.checkButtonInactive,
                               ]}
-                              activeOpacity={
-                                isEditMode && editingChecklistItem !== item.id
-                                  ? 0.7
-                                  : 1
-                              }
-                              disabled={
-                                !(
-                                  isEditMode && editingChecklistItem !== item.id
-                                )
-                              }
+                              activeOpacity={0.7}
                             >
-                              <Ionicons
-                                name="create-outline"
-                                size={18}
-                                color={memoizedColors.primary}
-                                style={{
-                                  opacity:
-                                    isEditMode &&
-                                    editingChecklistItem !== item.id
-                                      ? 1
-                                      : 0,
-                                }}
-                              />
+                              {item.isCompleted ? (
+                                <Ionicons
+                                  name="checkmark"
+                                  size={18}
+                                  color={memoizedColors.onPrimary}
+                                />
+                              ) : null}
                             </TouchableOpacity>
                             {isEditMode && (
-                              <TouchableOpacity
-                                onPress={() =>
-                                  handleDeleteChecklistItem(item.id)
-                                }
-                                style={[
-                                  styles.deleteItemButton,
-                                  styles.checklistIconButton,
-                                ]}
-                                activeOpacity={0.7}
-                              >
-                                <Ionicons
-                                  name="close"
-                                  size={16}
-                                  color={memoizedColors.error}
-                                />
-                              </TouchableOpacity>
+                              <>
+                                <TouchableOpacity
+                                  onPress={() =>
+                                    editingChecklistItem !== item.id &&
+                                    handleStartEditChecklistItem(
+                                      item.id,
+                                      item.title
+                                    )
+                                  }
+                                  style={[
+                                    styles.editItemButton,
+                                    styles.checklistIconButton,
+                                  ]}
+                                  activeOpacity={
+                                    editingChecklistItem !== item.id ? 0.7 : 1
+                                  }
+                                  disabled={editingChecklistItem === item.id}
+                                >
+                                  <Ionicons
+                                    name="create-outline"
+                                    size={16}
+                                    color={memoizedColors.primary}
+                                    style={[
+                                      styles.editIconOpacity,
+                                      {
+                                        opacity:
+                                          editingChecklistItem !== item.id
+                                            ? 1
+                                            : 0,
+                                      },
+                                    ]}
+                                  />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  onPress={() =>
+                                    handleDeleteChecklistItem(item.id)
+                                  }
+                                  style={[
+                                    styles.deleteItemButton,
+                                    styles.checklistIconButton,
+                                  ]}
+                                  activeOpacity={0.7}
+                                >
+                                  <Ionicons
+                                    name="close"
+                                    size={16}
+                                    color={memoizedColors.error}
+                                  />
+                                </TouchableOpacity>
+                              </>
                             )}
                           </View>
                         </>
@@ -883,10 +846,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   ))
                 ) : (
                   <Text
-                    style={[
-                      styles.emptyChecklist,
-                      { color: memoizedColors.onBackground + "60" },
-                    ]}
+                    style={[styles.emptyChecklist, themedStyles.emptyChecklist]}
                   >
                     체크리스트 항목이 없습니다.
                   </Text>
@@ -894,44 +854,19 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </View>
             </ScrollView>
 
-            <View
-              style={[
-                styles.modalFooter,
-                { borderTopColor: memoizedColors.onBackground + "20" },
-              ]}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  gap: 12,
-                }}
-              >
+            <View style={[styles.modalFooter, themedStyles.modalFooter]}>
+              <View style={styles.footerButtonsContainer}>
                 {onDeleteTask && (
                   <TouchableOpacity
                     onPress={handleDeleteTask}
-                    style={[
-                      styles.deleteFooterButton,
-                      {
-                        backgroundColor: memoizedColors.error,
-                        borderColor: memoizedColors.error,
-                        borderWidth: 1,
-                      },
-                    ]}
+                    style={styles.deleteFooterButton}
                   >
                     <Ionicons
                       name="trash"
                       size={16}
                       color={memoizedColors.onPrimary}
                     />
-                    <Text
-                      style={[
-                        styles.deleteFooterButtonText,
-                        { color: memoizedColors.onPrimary },
-                      ]}
-                    >
-                      삭제
-                    </Text>
+                    <Text style={styles.deleteFooterButtonText}>삭제</Text>
                   </TouchableOpacity>
                 )}
                 {onEdit && (
@@ -946,38 +881,19 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                           }
                         : undefined
                     }
-                    style={[
-                      styles.editButton,
-                      {
-                        backgroundColor: hasChanges
-                          ? memoizedColors.primary + "10"
-                          : memoizedColors.surface,
-                        borderColor: hasChanges
-                          ? memoizedColors.primary + "40"
-                          : memoizedColors.onBackground + "10",
-                        flex: 1,
-                      },
-                    ]}
+                    style={styles.editButton}
                     disabled={!hasChanges}
                     activeOpacity={hasChanges ? 0.7 : 1}
                   >
                     <Ionicons
                       name="pencil"
                       size={16}
-                      color={
-                        hasChanges
-                          ? memoizedColors.primary
-                          : memoizedColors.onBackground + "40"
-                      }
+                      color={hasChanges ? "#007AFF" : "#8E8E93"}
                     />
                     <Text
                       style={[
                         styles.editButtonText,
-                        {
-                          color: hasChanges
-                            ? memoizedColors.primary
-                            : memoizedColors.onBackground + "40",
-                        },
+                        { color: hasChanges ? "#007AFF" : "#8E8E93" },
                       ]}
                     >
                       저장
@@ -996,52 +912,69 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     justifyContent: "flex-end",
   },
   modalContainer: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: height * 0.9,
     minHeight: height * 0.5,
     flex: 1,
+    shadowColor: "rgba(0, 0, 0, 0.3)",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    padding: 24,
+    paddingBottom: 20,
     borderBottomWidth: 1,
   },
   closeButton: {
-    padding: 4,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   modalTitle: {
     ...TYPOGRAPHY.h3,
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 20,
   },
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
   },
   editModeButton: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   editButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 0,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignSelf: "center",
-    minWidth: 90,
-    minHeight: 48,
+    paddingHorizontal: 28,
+    paddingVertical: 18,
+    borderRadius: 12,
+    flex: 1,
+    minHeight: 56,
     borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.1)",
+    backgroundColor: "white",
+    shadowColor: "rgba(0, 0, 0, 0.1)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   editButtonText: {
-    marginLeft: 5,
-    fontSize: 16,
+    marginLeft: 10,
+    fontSize: 18,
     fontWeight: "600",
   },
 
@@ -1049,12 +982,10 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   modalContent: {
-    padding: 20,
+    padding: 24,
     flex: 1,
   },
-  taskHeader: {
-    marginBottom: 24,
-  },
+
   titleSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -1063,8 +994,10 @@ const styles = StyleSheet.create({
   },
   taskTitle: {
     ...TYPOGRAPHY.h2,
-    marginRight: 12,
     flex: 1,
+    fontSize: 24,
+    fontWeight: "700",
+    lineHeight: 32,
   },
 
   taskDescription: {
@@ -1076,104 +1009,148 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginTop: 8,
-  },
-  infoSection: {
     padding: 16,
     borderRadius: 12,
+    borderWidth: 2,
+    shadowColor: "rgba(0, 0, 0, 0.1)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  infoSection: {
+    padding: 20,
+    borderRadius: 16,
     marginBottom: 24,
+    shadowColor: "rgba(0, 0, 0, 0.05)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
-    minHeight: 24, // 고정 높이 적용
+    marginBottom: 12,
+    minHeight: 28,
+    paddingVertical: 4,
   },
   infoLabel: {
     ...TYPOGRAPHY.body2,
+    fontSize: 15,
+    fontWeight: "500",
   },
   infoValue: {
     ...TYPOGRAPHY.body2,
-    fontWeight: "500",
+    fontWeight: "600",
+    fontSize: 15,
   },
 
   checklistSection: {
     marginBottom: 24,
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+    borderRadius: 20,
+    padding: 18,
+    shadowColor: "rgba(0, 0, 0, 0.05)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 1,
   },
   checklistHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.1)",
   },
   checklistTitle: {
     ...TYPOGRAPHY.h3,
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 18,
   },
   addItemButton: {
-    padding: 8,
-    minHeight: 32, // 고정 높이 적용
+    padding: 10,
+    minHeight: 36,
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 18,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   addItemContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
-    padding: 12,
-    borderRadius: 8,
-    gap: 8,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+    backgroundColor: "white",
+    shadowColor: "rgba(0, 0, 0, 0.05)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   addItemInput: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 10,
+    padding: 14,
     ...TYPOGRAPHY.body2,
+    fontSize: 16,
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   addItemSubmitButton: {
-    padding: 12,
-    borderRadius: 8,
-    minHeight: 44,
-    minWidth: 44,
+    padding: 14,
+    borderRadius: 10,
+    minHeight: 48,
+    minWidth: 48,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "rgba(0, 0, 0, 0.1)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   checklistItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 0,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 0,
-    minHeight: 0,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: "white",
+    shadowColor: "rgba(0, 0, 0, 0.05)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   checklistCheckbox: {
-    marginRight: 4,
+    marginRight: 12,
     alignItems: "center",
     justifyContent: "center",
+    width: 24,
+    height: 24,
   },
   checklistItemText: {
-    flex: 0,
+    flex: 1,
     ...TYPOGRAPHY.body2,
     textAlign: "left",
-    justifyContent: "flex-start",
-    padding: 0,
-    margin: 0,
-    paddingTop: 0,
-    paddingBottom: 0,
-    marginTop: 0,
-    marginBottom: 0,
-    minHeight: 0,
-    lineHeight: undefined,
+    paddingLeft: 0,
+    lineHeight: 22,
+    fontSize: 16,
+    fontWeight: "500",
   },
   completedItemText: {
     textDecorationLine: "line-through",
+    opacity: 0.6,
+    fontStyle: "italic",
   },
   deleteItemButton: {
     padding: 4,
@@ -1185,11 +1162,13 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body2,
     textAlign: "center",
     fontStyle: "italic",
-    paddingVertical: 20,
+    paddingVertical: 32,
+    color: "rgba(0, 0, 0, 0.5)",
+    fontSize: 16,
   },
   modalFooter: {
-    padding: 16,
-    paddingHorizontal: 20,
+    padding: 20,
+    paddingHorizontal: 24,
     borderTopWidth: 1,
   },
   completeButtonText: {
@@ -1200,18 +1179,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 0,
-    paddingVertical: 14,
-    borderRadius: 14,
-    minWidth: 90,
-    minHeight: 48,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    flex: 1,
+    minHeight: 44,
     borderWidth: 1,
     borderColor: "transparent",
+    backgroundColor: "#FF3B30",
+    shadowColor: "rgba(0, 0, 0, 0.1)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   deleteFooterButtonText: {
-    marginLeft: 5,
-    fontSize: 16,
+    marginLeft: 6,
+    fontSize: 15,
     fontWeight: "600",
+    color: "white",
   },
   fixedModalTitle: {
     minHeight: 28, // 한 줄 기준 높이 고정 (폰트 크기와 패딩에 따라 조정)
@@ -1223,15 +1209,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginLeft: 8,
-    marginTop: 0,
-    marginBottom: 0,
   },
   checklistIconButton: {
-    minWidth: 28,
-    padding: 0,
-    margin: 0,
+    minWidth: 32,
+    minHeight: 32,
+    padding: 4,
     justifyContent: "center",
     alignItems: "center",
+  },
+  checkButton: {
+    minWidth: 36,
+    minHeight: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "rgba(0, 0, 0, 0.1)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  editItemButton: {
+    minWidth: 32,
+    minHeight: 32,
+    padding: 4,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   checklistEditContainer: {
     flexDirection: "row",
@@ -1242,10 +1247,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
+    minHeight: 32,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 200, // 키보드가 올라올 때를 대비한 여백 증가
   },
   descriptionSection: {
     marginBottom: 16,
@@ -1279,8 +1284,15 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -8 }],
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 12,
-    padding: 4,
     zIndex: 1,
+  },
+  footerButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  editIconOpacity: {
+    // 기본 스타일 (투명도는 인라인으로 설정)
   },
 });
 

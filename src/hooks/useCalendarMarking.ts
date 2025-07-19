@@ -27,7 +27,9 @@ export const useCalendarMarking = ({
       markedDates[today] = {
         marked: true,
         dotColor: colors.primary,
-        textColor: colors.primary,
+        textColor: colors.onBackground,
+        selected: true,
+        selectedColor: colors.primary + "30",
       };
     }
 
@@ -47,26 +49,17 @@ export const useCalendarMarking = ({
           markedDates[dateString] = {
             ...markedDates[dateString],
             marked: true,
-            dots: [
-              ...(markedDates[dateString].dots || []),
-              {
-                key: `completed-${task.id}`,
-                color: colors.secondary,
-              },
-            ],
+            selected: true,
+            selectedColor: colors.primary + "30",
           };
         } else {
           // 새로운 마킹 생성
           markedDates[dateString] = {
             marked: true,
-            dotColor: colors.secondary,
-            textColor: colors.secondary,
-            dots: [
-              {
-                key: `completed-${task.id}`,
-                color: colors.secondary,
-              },
-            ],
+            dotColor: colors.primary,
+            textColor: colors.onBackground,
+            selected: true,
+            selectedColor: colors.primary + "30",
           };
         }
       }

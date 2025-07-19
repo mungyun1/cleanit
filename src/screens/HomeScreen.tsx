@@ -26,6 +26,44 @@ const HomeScreen: React.FC = () => {
 
   const todayInfo = getTodayDate();
 
+  // 테마별 스타일 객체 생성
+  const themedStyles = {
+    container: { backgroundColor: colors.background },
+    dateCard: {
+      backgroundColor: colors.surface,
+      borderColor: colors.onBackground + "10",
+      shadowColor: colors.onBackground,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    statCard: {
+      backgroundColor: colors.surface,
+      shadowColor: colors.onBackground,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    categoryStatCard: {
+      backgroundColor: colors.surface,
+      shadowColor: colors.onBackground,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    dayText: { color: colors.onBackground + "60" },
+    dateNumber: { color: colors.onBackground },
+    statNumber: { color: colors.primary },
+    statLabel: { color: colors.onBackground + "80" },
+    categoryStatNumber: { color: colors.primary },
+    categoryStatLabel: { color: colors.onBackground + "80" },
+    emptyStateTitle: { color: colors.onBackground },
+    emptyStateDescription: { color: colors.onBackground + "60" },
+  };
+
   const handleToggleTask = useCallback(
     (taskId: string) => {
       setTodayTasks((prevTasks) => {
@@ -83,45 +121,22 @@ const HomeScreen: React.FC = () => {
   }, [todayTasks]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, themedStyles.container]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Header
-          title="🏠 가사 관리"
-          subtitle="오늘 할 청소와 빨래를 확인하세요"
-        />
+        <Header title="🏠 가사 관리" />
 
         <View style={styles.dateContainer}>
-          <View
-            style={[
-              styles.dateCard,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.onBackground + "10",
-                shadowColor: colors.onBackground,
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.08,
-                shadowRadius: 3,
-                elevation: 2,
-              },
-            ]}
-          >
+          <View style={[styles.dateCard, themedStyles.dateCard]}>
             <View style={styles.calendarBody}>
               <View style={styles.dateInfo}>
-                <Text
-                  style={[
-                    styles.dayText,
-                    { color: colors.onBackground + "60" },
-                  ]}
-                >
+                <Text style={[styles.dayText, themedStyles.dayText]}>
                   {todayInfo.dayName}요일
                 </Text>
-                <Text
-                  style={[styles.dateNumber, { color: colors.onBackground }]}
-                >
+                <Text style={[styles.dateNumber, themedStyles.dateNumber]}>
                   {todayInfo.year}년 {todayInfo.month}월 {todayInfo.date}일
                 </Text>
               </View>
@@ -133,69 +148,23 @@ const HomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.statsContainer}>
-          <View
-            style={[
-              styles.statCard,
-              {
-                backgroundColor: colors.surface,
-                shadowColor: colors.onBackground,
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.08,
-                shadowRadius: 3,
-                elevation: 2,
-              },
-            ]}
-          >
-            <Text style={[styles.statNumber, { color: colors.primary }]}>
+          <View style={[styles.statCard, themedStyles.statCard]}>
+            <Text style={[styles.statNumber, themedStyles.statNumber]}>
               {stats.total}
             </Text>
-            <Text
-              style={[styles.statLabel, { color: colors.onBackground + "80" }]}
-            >
-              전체
-            </Text>
+            <Text style={[styles.statLabel, themedStyles.statLabel]}>전체</Text>
           </View>
-          <View
-            style={[
-              styles.statCard,
-              {
-                backgroundColor: colors.surface,
-                shadowColor: colors.onBackground,
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.08,
-                shadowRadius: 3,
-                elevation: 2,
-              },
-            ]}
-          >
-            <Text style={[styles.statNumber, { color: colors.primary }]}>
+          <View style={[styles.statCard, themedStyles.statCard]}>
+            <Text style={[styles.statNumber, themedStyles.statNumber]}>
               {stats.completed}
             </Text>
-            <Text
-              style={[styles.statLabel, { color: colors.onBackground + "80" }]}
-            >
-              완료
-            </Text>
+            <Text style={[styles.statLabel, themedStyles.statLabel]}>완료</Text>
           </View>
-          <View
-            style={[
-              styles.statCard,
-              {
-                backgroundColor: colors.surface,
-                shadowColor: colors.onBackground,
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.08,
-                shadowRadius: 3,
-                elevation: 2,
-              },
-            ]}
-          >
-            <Text style={[styles.statNumber, { color: colors.primary }]}>
+          <View style={[styles.statCard, themedStyles.statCard]}>
+            <Text style={[styles.statNumber, themedStyles.statNumber]}>
               {stats.remaining}
             </Text>
-            <Text
-              style={[styles.statLabel, { color: colors.onBackground + "80" }]}
-            >
+            <Text style={[styles.statLabel, themedStyles.statLabel]}>
               남은 일
             </Text>
           </View>
@@ -203,61 +172,41 @@ const HomeScreen: React.FC = () => {
 
         <View style={styles.categoryStatsContainer}>
           <View
-            style={[
-              styles.categoryStatCard,
-              {
-                backgroundColor: colors.surface,
-                shadowColor: colors.onBackground,
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.08,
-                shadowRadius: 3,
-                elevation: 2,
-              },
-            ]}
+            style={[styles.categoryStatCard, themedStyles.categoryStatCard]}
           >
             <View style={styles.categoryIcon}>
               <Ionicons name="sparkles" size={20} color={colors.primary} />
             </View>
             <Text
-              style={[styles.categoryStatNumber, { color: colors.primary }]}
+              style={[
+                styles.categoryStatNumber,
+                themedStyles.categoryStatNumber,
+              ]}
             >
               {stats.cleaning}
             </Text>
             <Text
-              style={[
-                styles.categoryStatLabel,
-                { color: colors.onBackground + "80" },
-              ]}
+              style={[styles.categoryStatLabel, themedStyles.categoryStatLabel]}
             >
               청소
             </Text>
           </View>
           <View
-            style={[
-              styles.categoryStatCard,
-              {
-                backgroundColor: colors.surface,
-                shadowColor: colors.onBackground,
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.08,
-                shadowRadius: 3,
-                elevation: 2,
-              },
-            ]}
+            style={[styles.categoryStatCard, themedStyles.categoryStatCard]}
           >
             <View style={styles.categoryIcon}>
               <Ionicons name="shirt" size={20} color={colors.secondary} />
             </View>
             <Text
-              style={[styles.categoryStatNumber, { color: colors.primary }]}
+              style={[
+                styles.categoryStatNumber,
+                themedStyles.categoryStatNumber,
+              ]}
             >
               {stats.laundry}
             </Text>
             <Text
-              style={[
-                styles.categoryStatLabel,
-                { color: colors.onBackground + "80" },
-              ]}
+              style={[styles.categoryStatLabel, themedStyles.categoryStatLabel]}
             >
               빨래
             </Text>
@@ -266,7 +215,7 @@ const HomeScreen: React.FC = () => {
 
         <View style={styles.section}>
           <SectionHeader
-            title="오늘의 가사"
+            title="🫧 오늘 할 일"
             showAddButton={false}
             onAddPress={() => setIsAddModalVisible(true)}
           />
@@ -291,14 +240,14 @@ const HomeScreen: React.FC = () => {
                 />
               </View>
               <Text
-                style={[styles.emptyStateTitle, { color: colors.onBackground }]}
+                style={[styles.emptyStateTitle, themedStyles.emptyStateTitle]}
               >
                 예정된 작업이 없습니다🧹
               </Text>
               <Text
                 style={[
                   styles.emptyStateDescription,
-                  { color: colors.onBackground + "60" },
+                  themedStyles.emptyStateDescription,
                 ]}
               >
                 새로운 청소나 빨래 작업을 추가해보세요.

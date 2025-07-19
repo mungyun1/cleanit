@@ -92,11 +92,7 @@ const TaskManagementScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Header
-          title="📋 작업 관리"
-          subtitle="모든 청소 작업을 관리하세요"
-          showMenuButton={true}
-        />
+        <Header title="📋 작업 관리" showMenuButton={true} />
         <View style={styles.filtersContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TouchableOpacity
@@ -339,8 +335,7 @@ const styles = StyleSheet.create({
   },
   filtersContainer: {
     paddingHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 10,
+    marginVertical: 20,
   },
   filterButton: {
     borderWidth: 1,

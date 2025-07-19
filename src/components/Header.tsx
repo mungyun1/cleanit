@@ -5,14 +5,13 @@ import { useTheme } from "../contexts/ThemeContext";
 
 interface HeaderProps {
   title: string;
-  subtitle?: string;
   showMenuButton?: boolean;
   showBackButton?: boolean;
   onBackPress?: () => void;
   rightComponent?: React.ReactNode;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
+const Header: React.FC<HeaderProps> = ({ title }) => {
   const { colors } = useTheme();
 
   return (
@@ -22,13 +21,6 @@ const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
           <Text style={[styles.title, { color: colors.onBackground }]}>
             {title}
           </Text>
-          {subtitle && (
-            <Text
-              style={[styles.subtitle, { color: colors.onBackground + "70" }]}
-            >
-              {subtitle}
-            </Text>
-          )}
         </View>
       </View>
     </View>
@@ -37,8 +29,8 @@ const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 16,
-    paddingBottom: 12,
+    paddingTop: 20,
+    paddingBottom: 8,
   },
   content: {
     flexDirection: "row",
@@ -53,15 +45,9 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.h1,
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "700",
     letterSpacing: -0.5,
-  },
-  subtitle: {
-    ...TYPOGRAPHY.body2,
-    marginTop: 4,
-    fontSize: 16,
-    fontWeight: "400",
   },
 });
 
