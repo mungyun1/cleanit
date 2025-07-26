@@ -127,8 +127,6 @@ const HomeScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Header title="🏠 가사 관리" />
-
         <View style={styles.dateContainer}>
           <View style={[styles.dateCard, themedStyles.dateCard]}>
             <View style={styles.calendarBody}>
@@ -250,7 +248,7 @@ const HomeScreen: React.FC = () => {
                   themedStyles.emptyStateDescription,
                 ]}
               >
-                새로운 청소나 빨래 작업을 추가해보세요.
+                새로운 청소나 빨래 계획을 추가해보세요!
               </Text>
             </View>
           )}

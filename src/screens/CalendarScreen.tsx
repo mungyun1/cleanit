@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import { useTheme } from "../contexts/ThemeContext";
-import Header from "../components/Header";
-import ScheduledTasksModal from "../components/ScheduledTasksModal";
-import CalendarStats from "../components/CalendarStats";
+import { useTaskContext } from "../contexts/TaskContext";
 import { ScheduledTask } from "../data/unifiedData";
 import { COMPLETED_TASKS_MOCK_DATA } from "../data/calendarMockData";
-import { useTaskContext } from "../contexts/TaskContext";
+import CalendarStats from "../components/CalendarStats";
+import ScheduledTasksModal from "../components/ScheduledTasksModal";
 import { useCalendarMarking } from "../hooks/useCalendarMarking";
 import {
   getTodayString,
@@ -104,7 +103,6 @@ const CalendarScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Header title="📅 캘린더" showMenuButton={true} />
         <View style={styles.calendarContainer}>
           <View style={styles.calendarWrapper}>
             <Calendar

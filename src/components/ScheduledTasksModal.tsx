@@ -8,6 +8,7 @@ import {
   FlatList,
   Alert,
   Dimensions,
+  Animated,
 } from "react-native";
 import { TYPOGRAPHY } from "../constants";
 import { useTheme } from "../contexts/ThemeContext";
@@ -21,9 +22,10 @@ interface ScheduledTasksModalProps {
   tasks: ScheduledTask[];
 }
 
-const { width: screenWidth } = Dimensions.get("window");
-const CARD_WIDTH = screenWidth * 0.9;
-const SIDE_PADDING = (screenWidth - CARD_WIDTH) / 2;
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const CARD_WIDTH = screenWidth * 0.8;
+const CARD_MARGIN = 10;
+const SNAP_INTERVAL = CARD_WIDTH + CARD_MARGIN * 2;
 
 const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
   visible,
@@ -34,6 +36,24 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
   const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [listWidth, setListWidth] = useState(screenWidth);
+
+  React.useEffect(() => {
+    if (visible) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible, fadeAnim]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -56,13 +76,26 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "#FF6B6B";
+        return "#FF4757";
       case "medium":
-        return "#FFA726";
+        return "#FFA502";
       case "low":
-        return "#66BB6A";
+        return "#2ED573";
       default:
         return colors.onBackground;
+    }
+  };
+
+  const getPriorityGradient = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return ["#FF4757", "#FF3742"];
+      case "medium":
+        return ["#FFA502", "#FF9500"];
+      case "low":
+        return ["#2ED573", "#1ED760"];
+      default:
+        return [colors.primary, colors.primary];
     }
   };
 
@@ -80,15 +113,29 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
     ]);
   };
 
-  const renderTaskCard = ({ item }: { item: ScheduledTask }) => (
-    <View
+  const renderTaskCard = ({
+    item,
+    index,
+  }: {
+    item: ScheduledTask;
+    index: number;
+  }) => (
+    <Animated.View
       style={[
         styles.taskCard,
         {
           backgroundColor: colors.surface,
           shadowColor: colors.onBackground,
-          borderColor: colors.surface + "20",
-          opacity: item.isCompleted ? 0.5 : 1, // 완료된 작업은 흐리게
+          borderColor: colors.surface + "15",
+          opacity: item.isCompleted ? 0.7 : 1,
+          transform: [
+            {
+              scale: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, 1],
+              }),
+            },
+          ],
         },
       ]}
     >
@@ -97,13 +144,16 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
           <View
             style={[
               styles.areaBadge,
-              { backgroundColor: colors.surface + "10" },
+              {
+                backgroundColor: item.color + "15",
+                borderColor: item.color + "30",
+              },
             ]}
           >
             <View
               style={[styles.areaIndicator, { backgroundColor: item.color }]}
             />
-            <Text style={[styles.areaText, { color: colors.onBackground }]}>
+            <Text style={[styles.areaText, { color: item.color }]}>
               {item.area}
             </Text>
           </View>
@@ -111,13 +161,13 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
             {item.title}
           </Text>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <View style={styles.badgeContainer}>
           <View
             style={[
               styles.priorityBadge,
               {
                 backgroundColor: getPriorityColor(item.priority),
-                shadowColor: colors.onBackground,
+                shadowColor: getPriorityColor(item.priority),
               },
             ]}
           >
@@ -127,7 +177,7 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
           </View>
           {item.isCompleted && (
             <View style={styles.completedBadge}>
-              <Ionicons name="checkmark-circle" size={16} color="#66BB6A" />
+              <Ionicons name="checkmark-circle" size={16} color="#2ED573" />
               <Text style={styles.completedText}>완료됨</Text>
             </View>
           )}
@@ -137,13 +187,16 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
       <View
         style={[
           styles.descriptionContainer,
-          { backgroundColor: colors.background },
+          {
+            backgroundColor: colors.background,
+            borderColor: colors.surface + "20",
+          },
         ]}
       >
         <Text
           style={[
             styles.descriptionLabel,
-            { color: colors.onBackground + "60" },
+            { color: colors.onBackground + "70" },
           ]}
         >
           작업 내용
@@ -165,6 +218,7 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
             {
               backgroundColor: colors.background,
               shadowColor: colors.onBackground,
+              borderColor: colors.surface + "15",
             },
           ]}
         >
@@ -188,6 +242,7 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
             {
               backgroundColor: colors.background,
               shadowColor: colors.onBackground,
+              borderColor: colors.surface + "15",
             },
           ]}
         >
@@ -210,7 +265,7 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
       <View style={styles.actionButtons}>
         {item.isCompleted ? (
           <View style={styles.completedMessageContainer}>
-            <Ionicons name="checkmark-circle" size={20} color="#66BB6A" />
+            <Ionicons name="checkmark-circle" size={20} color="#2ED573" />
             <Text style={styles.completedMessageText}>
               작업이 완료되었습니다
             </Text>
@@ -223,10 +278,11 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
                 styles.startButton,
                 {
                   backgroundColor: colors.primary,
-                  shadowColor: colors.onBackground,
+                  shadowColor: colors.primary,
                 },
               ]}
               onPress={() => handleStartTask(item)}
+              activeOpacity={0.8}
             >
               <Text
                 style={[styles.startButtonText, { color: colors.onPrimary }]}
@@ -245,6 +301,7 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
                 },
               ]}
               onPress={() => handleCompleteTask(item)}
+              activeOpacity={0.8}
             >
               <Text
                 style={[styles.completeButtonText, { color: colors.primary }]}
@@ -255,7 +312,7 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
           </>
         )}
       </View>
-    </View>
+    </Animated.View>
   );
 
   const renderPaginationDots = () => {
@@ -283,14 +340,12 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
     );
   };
 
-  // useCallback으로 고정
   const handleViewableItemsChanged = useCallback(({ viewableItems }: any) => {
     if (viewableItems && viewableItems.length > 0) {
       setCurrentIndex(viewableItems[0].index);
     }
   }, []);
 
-  // useMemo로 고정
   const viewabilityConfig = useMemo(
     () => ({
       itemVisiblePercentThreshold: 50,
@@ -305,36 +360,66 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View
+      <Animated.View
+        style={[
+          styles.overlay,
+          {
+            opacity: fadeAnim,
+          },
+        ]}
+      >
+        <Animated.View
           style={[
             styles.modalContainer,
-            { backgroundColor: colors.background },
+            {
+              backgroundColor: colors.background,
+              transform: [
+                {
+                  translateY: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [50, 0],
+                  }),
+                },
+              ],
+            },
           ]}
         >
-          <View style={[styles.header, { borderBottomColor: colors.surface }]}>
-            <Text style={[styles.title, { color: colors.onBackground }]}>
-              {formatDate(date)}
-            </Text>
-            <Text
-              style={[styles.subtitle, { color: colors.onBackground + "80" }]}
-            >
-              완료한 작업 ({tasks.length}개)
-            </Text>
+          <View
+            style={[
+              styles.header,
+              { borderBottomColor: colors.surface + "20" },
+            ]}
+          >
+            <View style={styles.headerContent}>
+              <Text style={[styles.title, { color: colors.onBackground }]}>
+                {formatDate(date)}
+              </Text>
+              <Text
+                style={[styles.subtitle, { color: colors.onBackground + "70" }]}
+              >
+                예정된 작업 ({tasks.length}개)
+              </Text>
+            </View>
             <TouchableOpacity
               style={[styles.closeButton, { backgroundColor: colors.surface }]}
               onPress={onClose}
+              activeOpacity={0.7}
             >
-              <Text
-                style={[styles.closeButtonText, { color: colors.onBackground }]}
-              >
-                ✕
-              </Text>
+              <Ionicons name="close" size={20} color={colors.onBackground} />
             </TouchableOpacity>
           </View>
 
           {tasks.length === 0 ? (
             <View style={styles.emptyContainer}>
+              <View
+                style={[styles.emptyIcon, { backgroundColor: colors.surface }]}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={40}
+                  color={colors.onBackground + "40"}
+                />
+              </View>
               <Text
                 style={[
                   styles.emptyText,
@@ -343,10 +428,20 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
               >
                 예정된 작업이 없습니다.
               </Text>
+              <Text
+                style={[
+                  styles.emptySubtext,
+                  { color: colors.onBackground + "40" },
+                ]}
+              >
+                새로운 계획을 추가해보세요!
+              </Text>
             </View>
           ) : (
             <>
               <FlatList
+                style={{ width: "100%" }}
+                onLayout={(e) => setListWidth(e.nativeEvent.layout.width)}
                 ref={flatListRef}
                 data={tasks}
                 renderItem={renderTaskCard}
@@ -357,23 +452,24 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
                 onViewableItemsChanged={handleViewableItemsChanged}
                 viewabilityConfig={viewabilityConfig}
                 contentContainerStyle={{
-                  paddingHorizontal: SIDE_PADDING,
+                  paddingHorizontal: (listWidth - CARD_WIDTH) / 2,
                   alignItems: "center",
+                  paddingVertical: 16,
                 }}
-                snapToInterval={CARD_WIDTH}
-                decelerationRate="fast"
-                snapToAlignment="start"
+                snapToInterval={SNAP_INTERVAL}
+                decelerationRate={"fast"}
+                snapToAlignment="center"
                 getItemLayout={(data, index) => ({
-                  length: CARD_WIDTH,
-                  offset: CARD_WIDTH * index,
+                  length: SNAP_INTERVAL,
+                  offset: SNAP_INTERVAL * index,
                   index,
                 })}
               />
               {renderPaginationDots()}
             </>
           )}
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 };
@@ -381,59 +477,85 @@ const ScheduledTasksModal: React.FC<ScheduledTasksModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     justifyContent: "flex-end",
   },
   modalContainer: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: "80%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: "85%",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
   header: {
-    padding: 20,
+    padding: 24,
     borderBottomWidth: 1,
     position: "relative",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  headerContent: {
+    flex: 1,
+    marginRight: 20,
   },
   title: {
     ...TYPOGRAPHY.h2,
-    marginBottom: 5,
+    marginBottom: 6,
+    fontWeight: "700",
   },
   subtitle: {
     ...TYPOGRAPHY.h4,
+    fontWeight: "500",
   },
   closeButton: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
-  },
-  closeButtonText: {
-    fontSize: 18,
-    fontWeight: "bold",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   emptyContainer: {
     alignItems: "center",
-    paddingVertical: 40,
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   emptyText: {
-    ...TYPOGRAPHY.body1,
+    ...TYPOGRAPHY.h3,
+    fontWeight: "600",
+    marginBottom: 8,
   },
-  flatListContent: {
-    alignItems: "center",
+  emptySubtext: {
+    ...TYPOGRAPHY.body1,
+    textAlign: "center",
   },
   taskCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 28,
+    borderRadius: 24,
+    padding: 18,
+    marginHorizontal: CARD_MARGIN,
     width: CARD_WIDTH,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
     borderWidth: 1,
   },
   taskHeader: {
@@ -441,101 +563,114 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 20,
+    minHeight: 70,
   },
   taskTitleContainer: {
     flex: 1,
-    marginRight: 10,
+    marginRight: 16,
+    justifyContent: "flex-start",
   },
   areaBadge: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     marginBottom: 8,
     alignSelf: "flex-start",
+    borderWidth: 1,
   },
   areaIndicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 6,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
   },
   areaText: {
     ...TYPOGRAPHY.caption,
-    fontWeight: "600",
-    fontSize: 12,
+    fontWeight: "700",
+    fontSize: 13,
   },
   taskTitle: {
     ...TYPOGRAPHY.h3,
     fontWeight: "700",
-    lineHeight: 24,
+    lineHeight: 26,
+  },
+  badgeContainer: {
+    alignItems: "flex-start",
+    gap: 8,
+    justifyContent: "flex-start",
+    flexShrink: 0,
+    minWidth: 80,
   },
   priorityBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   priorityText: {
     ...TYPOGRAPHY.caption,
     color: "white",
-    fontWeight: "bold",
-    fontSize: 11,
+    fontWeight: "700",
+    fontSize: 12,
   },
   descriptionContainer: {
     marginBottom: 20,
-    borderRadius: 12,
-    padding: 15,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
   },
   descriptionLabel: {
     ...TYPOGRAPHY.body2,
-    marginBottom: 8,
+    marginBottom: 10,
     fontWeight: "600",
   },
   taskDescription: {
     ...TYPOGRAPHY.body2,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   infoSection: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 20,
-    gap: 10,
+    gap: 12,
   },
   infoCard: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    shadowOffset: { width: 0, height: 1 },
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
   },
   infoIconContainer: {
-    marginRight: 10,
+    marginRight: 14,
   },
   infoIcon: {
-    fontSize: 20,
+    fontSize: 22,
   },
   infoContent: {
     flex: 1,
   },
   infoLabel: {
     ...TYPOGRAPHY.caption,
-    marginBottom: 2,
-    fontSize: 11,
+    marginBottom: 4,
+    fontSize: 12,
   },
   infoValue: {
     ...TYPOGRAPHY.body2,
-    fontWeight: "600",
-    fontSize: 14,
+    fontWeight: "700",
+    fontSize: 15,
+    marginTop: 2,
   },
   actionButtons: {
     flexDirection: "row",
@@ -543,21 +678,21 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: "center",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   startButton: {
     // backgroundColor는 인라인으로 적용
   },
   startButtonText: {
     ...TYPOGRAPHY.body2,
-    fontWeight: "bold",
-    fontSize: 15,
+    fontWeight: "700",
+    fontSize: 16,
   },
   completeButton: {
     borderWidth: 2,
@@ -565,60 +700,61 @@ const styles = StyleSheet.create({
   },
   completeButtonText: {
     ...TYPOGRAPHY.body2,
-    fontWeight: "bold",
-    fontSize: 15,
+    fontWeight: "700",
+    fontSize: 16,
   },
   paginationContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 20,
-    gap: 10,
+    gap: 12,
   },
   paginationDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
   paginationDotActive: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   completedBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E0F7E9",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 8,
+    backgroundColor: "#E8F5E8",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "#2ED573",
   },
   completedText: {
-    color: "#388E3C",
-    fontWeight: "bold",
-    marginLeft: 4,
+    color: "#2ED573",
+    fontWeight: "700",
+    marginLeft: 6,
     fontSize: 13,
   },
   completedMessageContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "#E0F7E9",
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: "#E8F5E8",
     borderWidth: 2,
-    borderColor: "#66BB6A",
+    borderColor: "#2ED573",
     flex: 1,
   },
   completedMessageText: {
-    color: "#388E3C",
-    fontWeight: "bold",
-    fontSize: 15,
+    color: "#2ED573",
+    fontWeight: "700",
+    fontSize: 16,
     marginLeft: 8,
   },
 });

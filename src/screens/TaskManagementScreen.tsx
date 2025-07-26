@@ -92,7 +92,6 @@ const TaskManagementScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Header title="📋 작업 관리" showMenuButton={true} />
         <View style={styles.filtersContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TouchableOpacity
@@ -278,7 +277,7 @@ const TaskManagementScreen: React.FC = () => {
                     { color: colors.onBackground + "60" },
                   ]}
                 >
-                  첫 번째 가사 작업을 추가해보세요.
+                  첫 번째 계획을 추가해보세요!
                 </Text>
                 <Text
                   style={[

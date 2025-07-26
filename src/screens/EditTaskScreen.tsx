@@ -5,7 +5,6 @@ import Header from "../components/Header";
 
 const EditTaskScreen = () => (
   <View style={styles.container}>
-    <Header title="✏️ 작업 수정" showBackButton={true} onBackPress={() => {}} />
     <View style={styles.content}>
       <Text style={styles.placeholderText}>청소 항목 수정 화면</Text>
     </View>

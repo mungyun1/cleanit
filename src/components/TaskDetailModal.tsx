@@ -886,14 +886,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     activeOpacity={hasChanges ? 0.7 : 1}
                   >
                     <Ionicons
-                      name="pencil"
+                      name="save"
                       size={16}
-                      color={hasChanges ? "#007AFF" : "#8E8E93"}
+                      color={hasChanges ? colors.primary : "#8E8E93"}
                     />
                     <Text
                       style={[
                         styles.editButtonText,
-                        { color: hasChanges ? "#007AFF" : "#8E8E93" },
+                        { color: hasChanges ? colors.primary : "#8E8E93" },
                       ]}
                     >
                       저장
